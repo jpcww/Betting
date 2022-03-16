@@ -1,0 +1,117 @@
+{
+    "name": "PlayerInput",
+    "maps": [
+        {
+            "name": "Bet",
+            "id": "e8e28040-f2d7-4d8e-981e-198852a1ab1f",
+            "actions": [
+                {
+                    "name": "AddBet",
+                    "type": "Button",
+                    "id": "9a8ea155-a9b0-46b7-9b27-998bc139e03c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "ConfirmBet",
+                    "type": "Button",
+                    "id": "a3d354fd-88f1-4a22-83bd-97f0f6a318f2",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "SelectGreen",
+                    "type": "Button",
+                    "id": "e0d9a3fc-83b7-4bf6-9d7d-ebe457341c7f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "SelectRed",
+                    "type": "Button",
+                    "id": "06335f83-c381-495d-a177-a7d8438451e7",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "713c11b9-737f-4fab-95ad-fbef760ab7eb",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AddBet",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5fa9db0b-10f0-4f45-a406-8a1a65abadb3",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ConfirmBet",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e4e63819-7b57-4bfc-9cc1-441c85564ec9",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectGreen",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1d4fd95e-f76e-48dd-9953-b4ef41a32159",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectRed",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "PlayerMovement",
+            "id": "a8b43b91-652e-42f2-9bdc-057a48c018a5",
+            "actions": [
+                {
+                    "name": "Camera",
+                    "type": "PassThrough",
+                    "id": "893f2299-5591-4a4a-81a1-661139a981ac",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "481e7bd3-8f9c-4200-803d-4f60087ee81d",
+                    "path": "<Mouse>/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Camera",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
