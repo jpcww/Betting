@@ -14,7 +14,7 @@ public class Player : MonoBehaviour
 
     #region Bet
     public int selectedColor;
-    public bool colorSelected = false;
+    public bool hasSelectedColor = false;
     public int currentChipAmount = 100;
     public int defaultBetAmount = 10;
     public int betAmount = 0;
@@ -25,6 +25,9 @@ public class Player : MonoBehaviour
     #region UI
     public TextMeshProUGUI Text_betAmount;
     public TextMeshProUGUI Text_moneyAmount;
+    private string warning_SelectColor = "Please Choose your color";
+    private string warning_NotEnoughChip = "Not enough chip to bet";
+    private string warning_AlreadyBet = "Already Bet";
     #endregion
 
     #region Input
@@ -48,8 +51,8 @@ public class Player : MonoBehaviour
 
             playerInput.Bet.SelectGreen.performed += i => SelectGreen();
             playerInput.Bet.SelectRed.performed += i => SelectRed();
-            playerInput.Bet.AddBet.performed += i => Bet();
-            playerInput.Bet.ConfirmBet.performed += i => Confirm();
+            playerInput.Bet.AddBet.performed += i => DecideBetAmout();
+            playerInput.Bet.ConfirmBet.performed += i => Bet();
         }
 
         playerInput.Enable();
@@ -63,41 +66,50 @@ public class Player : MonoBehaviour
     public void SelectGreen()
     {
         selectedColor = (int)ColorNames.green;
-        colorSelected = true;
+        hasSelectedColor = true;
     }
     public void SelectRed()
     {
         selectedColor = (int)ColorNames.red;
-        colorSelected = true;
+        hasSelectedColor = true;
     }
 
     // DECIDE AMOUNT OF BETTING
-    public void Bet()
+    public void DecideBetAmout()
     {
+        if(!hasSelectedColor)
+        {
+            StartCoroutine(ShowNotification(Text_betAmount, warning_SelectColor, 1));
+            return;
+        }
+
         if (!hasBet && betAmount < currentChipAmount)
         {
             betAmount += defaultBetAmount;
             Text_betAmount.text = string.Format("${0}", betAmount);
+            return;
         }
 
         else if(!hasBet && betAmount >= currentChipAmount)
         {
-            Text_betAmount.text = "not enough chips!";
+            StartCoroutine(ShowNotification(Text_betAmount, warning_NotEnoughChip, 1));
+            return;
         }
 
         else if(hasBet)
         {
-            Text_betAmount.text = "already bet";
+            StartCoroutine(ShowNotification(Text_betAmount, warning_AlreadyBet, 1));
+            return;
         }
     }
 
-    // BET CONFIRM
-    public void Confirm()
+    // BET
+    public void Bet()
     {
         if (!hasBet)
         {
             currentChipAmount -= betAmount;
-            Text_betAmount.text = "bet";
+            Text_betAmount.text = "Bet";
             Text_moneyAmount.text = string.Format("${0}", currentChipAmount);
 
             if (currentChipAmount <= 0)
@@ -118,5 +130,13 @@ public class Player : MonoBehaviour
     public void LoseChips()
     {
 
+    }
+
+    IEnumerator ShowNotification(TextMeshProUGUI targetUI, string message, int time)
+    {
+        string prevText = targetUI.text;
+        targetUI.text = message;
+        yield return new WaitForSeconds(time);
+        targetUI.text = prevText;
     }
 }

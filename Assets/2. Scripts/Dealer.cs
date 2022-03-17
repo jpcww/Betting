@@ -21,7 +21,11 @@ public class Dealer : MonoBehaviour
     }
 
 
-    //TODO: within a coroutine waiting until all the players bet
+    // CHECK PLAYERS
+
+    // WAIT FOR PLAYERS BETTING
+
+    // REAVEAL THE COLOR
     private void RevealColor()
     {
         revealedColor = Random.Range(0, 2);
@@ -37,4 +41,10 @@ public class Dealer : MonoBehaviour
             material.color = Color.red;
         }
     }
+
+    // PROCESS WIN/LOSE
+
+    // ANOUNCE THE RESULT
+
+
 }
