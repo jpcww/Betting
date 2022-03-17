@@ -28,7 +28,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     public void OnClickCreate()
     {
-        if(input_roomName.text.Length >= 1) // TODO: add warning when there is no name
+        if (input_roomName.text.Length >= 1) // TODO: add warning when there is no name
         {
             PhotonNetwork.CreateRoom(input_roomName.text, new RoomOptions() { MaxPlayers = 3});  // Create a room
         }
