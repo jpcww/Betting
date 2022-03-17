@@ -8,6 +8,12 @@ public class MainMenu : MonoBehaviour
     public GameObject mainMenu;
     public GameObject connectMenu;
 
+    private void Awake()
+    {
+        mainMenu.SetActive(true);
+        connectMenu.SetActive(false);
+    }
+
     public void OpenConnectMenu()
     {
         mainMenu.SetActive(false);
