@@ -10,7 +10,6 @@ using Photon.Realtime;
 public class PlayerInstance : MonoBehaviour
 {
     #region GameObject
-    private Player player;
     public ExitGames.Client.Photon.Hashtable playerProperties =new ExitGames.Client.Photon.Hashtable();
     private Dealer dealer;
     #endregion
@@ -21,7 +20,7 @@ public class PlayerInstance : MonoBehaviour
     public int currentChipAmount = 100;
     private int defaultBetAmount = 10;
     public int betAmount = 0;
-    private bool hasBet = false;
+    public bool hasBet = false;
     #endregion
 
     #region UI

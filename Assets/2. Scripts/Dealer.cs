@@ -13,7 +13,7 @@ public enum ColorNames
 public class Dealer : MonoBehaviourPunCallbacks
 {
     #region Bet
-    private bool allBet = false;
+    private bool allBet = true;
     #endregion
 
     #region Color Reveal
@@ -34,6 +34,32 @@ public class Dealer : MonoBehaviourPunCallbacks
 
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
     {
+        Debug.Log("targetPlayer : " + " " + targetPlayer + " changed props" + changedProps.ToString());
+
+        playerInstances.Clear();
+        playerInstances.AddRange(FindObjectsOfType<PlayerInstance>());
+
+        foreach (PlayerInstance playerInstance in playerInstances)
+        {
+            Debug.Log("player instance count : " + playerInstances.Count);
+            if (playerInstance.hasBet == false)
+                allBet = false;
+        }
+
+        if (!allBet)
+        {
+            Debug.Log("allbet false");
+            return;
+        }
+        else if(allBet)
+        {
+            Debug.Log("ready to reveal");
+            RevealColor();
+            ProcessWinLose();
+        }
+
+
+        /*
         if (!changedProps.ContainsKey("hasBet"))
         {
             Debug.Log("no hasBet");
@@ -61,6 +87,7 @@ public class Dealer : MonoBehaviourPunCallbacks
                 ProcessWinLose();
             }
         }
+        */
     }
 
     // REAVEAL THE COLOR
