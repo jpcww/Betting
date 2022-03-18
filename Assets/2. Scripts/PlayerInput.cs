@@ -19,7 +19,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
             ""id"": ""e8e28040-f2d7-4d8e-981e-198852a1ab1f"",
             ""actions"": [
                 {
-                    ""name"": ""AddBet"",
+                    ""name"": ""DecideBetAmount"",
                     ""type"": ""Button"",
                     ""id"": ""9a8ea155-a9b0-46b7-9b27-998bc139e03c"",
                     ""expectedControlType"": ""Button"",
@@ -27,7 +27,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""interactions"": """"
                 },
                 {
-                    ""name"": ""ConfirmBet"",
+                    ""name"": ""Bet"",
                     ""type"": ""Button"",
                     ""id"": ""a3d354fd-88f1-4a22-83bd-97f0f6a318f2"",
                     ""expectedControlType"": ""Button"",
@@ -59,7 +59,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""AddBet"",
+                    ""action"": ""DecideBetAmount"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -70,7 +70,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""ConfirmBet"",
+                    ""action"": ""Bet"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -130,8 +130,8 @@ public class @PlayerInput : IInputActionCollection, IDisposable
 }");
         // Bet
         m_Bet = asset.FindActionMap("Bet", throwIfNotFound: true);
-        m_Bet_AddBet = m_Bet.FindAction("AddBet", throwIfNotFound: true);
-        m_Bet_ConfirmBet = m_Bet.FindAction("ConfirmBet", throwIfNotFound: true);
+        m_Bet_DecideBetAmount = m_Bet.FindAction("DecideBetAmount", throwIfNotFound: true);
+        m_Bet_Bet = m_Bet.FindAction("Bet", throwIfNotFound: true);
         m_Bet_SelectGreen = m_Bet.FindAction("SelectGreen", throwIfNotFound: true);
         m_Bet_SelectRed = m_Bet.FindAction("SelectRed", throwIfNotFound: true);
         // PlayerMovement
@@ -186,16 +186,16 @@ public class @PlayerInput : IInputActionCollection, IDisposable
     // Bet
     private readonly InputActionMap m_Bet;
     private IBetActions m_BetActionsCallbackInterface;
-    private readonly InputAction m_Bet_AddBet;
-    private readonly InputAction m_Bet_ConfirmBet;
+    private readonly InputAction m_Bet_DecideBetAmount;
+    private readonly InputAction m_Bet_Bet;
     private readonly InputAction m_Bet_SelectGreen;
     private readonly InputAction m_Bet_SelectRed;
     public struct BetActions
     {
         private @PlayerInput m_Wrapper;
         public BetActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
-        public InputAction @AddBet => m_Wrapper.m_Bet_AddBet;
-        public InputAction @ConfirmBet => m_Wrapper.m_Bet_ConfirmBet;
+        public InputAction @DecideBetAmount => m_Wrapper.m_Bet_DecideBetAmount;
+        public InputAction @Bet => m_Wrapper.m_Bet_Bet;
         public InputAction @SelectGreen => m_Wrapper.m_Bet_SelectGreen;
         public InputAction @SelectRed => m_Wrapper.m_Bet_SelectRed;
         public InputActionMap Get() { return m_Wrapper.m_Bet; }
@@ -207,12 +207,12 @@ public class @PlayerInput : IInputActionCollection, IDisposable
         {
             if (m_Wrapper.m_BetActionsCallbackInterface != null)
             {
-                @AddBet.started -= m_Wrapper.m_BetActionsCallbackInterface.OnAddBet;
-                @AddBet.performed -= m_Wrapper.m_BetActionsCallbackInterface.OnAddBet;
-                @AddBet.canceled -= m_Wrapper.m_BetActionsCallbackInterface.OnAddBet;
-                @ConfirmBet.started -= m_Wrapper.m_BetActionsCallbackInterface.OnConfirmBet;
-                @ConfirmBet.performed -= m_Wrapper.m_BetActionsCallbackInterface.OnConfirmBet;
-                @ConfirmBet.canceled -= m_Wrapper.m_BetActionsCallbackInterface.OnConfirmBet;
+                @DecideBetAmount.started -= m_Wrapper.m_BetActionsCallbackInterface.OnDecideBetAmount;
+                @DecideBetAmount.performed -= m_Wrapper.m_BetActionsCallbackInterface.OnDecideBetAmount;
+                @DecideBetAmount.canceled -= m_Wrapper.m_BetActionsCallbackInterface.OnDecideBetAmount;
+                @Bet.started -= m_Wrapper.m_BetActionsCallbackInterface.OnBet;
+                @Bet.performed -= m_Wrapper.m_BetActionsCallbackInterface.OnBet;
+                @Bet.canceled -= m_Wrapper.m_BetActionsCallbackInterface.OnBet;
                 @SelectGreen.started -= m_Wrapper.m_BetActionsCallbackInterface.OnSelectGreen;
                 @SelectGreen.performed -= m_Wrapper.m_BetActionsCallbackInterface.OnSelectGreen;
                 @SelectGreen.canceled -= m_Wrapper.m_BetActionsCallbackInterface.OnSelectGreen;
@@ -223,12 +223,12 @@ public class @PlayerInput : IInputActionCollection, IDisposable
             m_Wrapper.m_BetActionsCallbackInterface = instance;
             if (instance != null)
             {
-                @AddBet.started += instance.OnAddBet;
-                @AddBet.performed += instance.OnAddBet;
-                @AddBet.canceled += instance.OnAddBet;
-                @ConfirmBet.started += instance.OnConfirmBet;
-                @ConfirmBet.performed += instance.OnConfirmBet;
-                @ConfirmBet.canceled += instance.OnConfirmBet;
+                @DecideBetAmount.started += instance.OnDecideBetAmount;
+                @DecideBetAmount.performed += instance.OnDecideBetAmount;
+                @DecideBetAmount.canceled += instance.OnDecideBetAmount;
+                @Bet.started += instance.OnBet;
+                @Bet.performed += instance.OnBet;
+                @Bet.canceled += instance.OnBet;
                 @SelectGreen.started += instance.OnSelectGreen;
                 @SelectGreen.performed += instance.OnSelectGreen;
                 @SelectGreen.canceled += instance.OnSelectGreen;
@@ -274,8 +274,8 @@ public class @PlayerInput : IInputActionCollection, IDisposable
     public PlayerMovementActions @PlayerMovement => new PlayerMovementActions(this);
     public interface IBetActions
     {
-        void OnAddBet(InputAction.CallbackContext context);
-        void OnConfirmBet(InputAction.CallbackContext context);
+        void OnDecideBetAmount(InputAction.CallbackContext context);
+        void OnBet(InputAction.CallbackContext context);
         void OnSelectGreen(InputAction.CallbackContext context);
         void OnSelectRed(InputAction.CallbackContext context);
     }

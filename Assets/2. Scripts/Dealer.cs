@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
+using Photon.Realtime;
 
 public enum ColorNames
 {
@@ -8,11 +10,21 @@ public enum ColorNames
     red
 }
 
-public class Dealer : MonoBehaviour
+public class Dealer : MonoBehaviourPunCallbacks
 {
+    #region Bet
+    private bool allBet = false;
+    #endregion
+
+    #region Color Reveal
     public GameObject colorBox;
     public Material material;
     public int revealedColor;
+    #endregion
+
+    #region Player
+    List<PlayerInstance> playerInstances = new List<PlayerInstance>();
+    #endregion
 
     private void Start()
     {
@@ -20,15 +32,43 @@ public class Dealer : MonoBehaviour
         material.color = Color.grey;
     }
 
+    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
+    {
+        if (!changedProps.ContainsKey("hasBet"))
+        {
+            Debug.Log("no hasBet");
+            return;
+        }
 
-    // CHECK PLAYERS
+        else
+        {
+            Debug.Log("hasBet");
+            foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
+            {
+                if((bool)player.CustomProperties["hasBet"] == false)
+                {
+                    allBet = false;
+                }
+            }
 
-    // WAIT FOR PLAYERS BETTING
+            if (allBet == false)
+                return;
+
+            else
+            {
+                Debug.Log("ready to reveal");
+                RevealColor();
+                ProcessWinLose();
+            }
+        }
+    }
 
     // REAVEAL THE COLOR
     private void RevealColor()
     {
+        Debug.Log("reveal color");
         revealedColor = Random.Range(0, 2);
+        Debug.Log("revealed color : " + revealedColor);
 
         // Change the color
         if (revealedColor == (int)ColorNames.green)
@@ -43,8 +83,17 @@ public class Dealer : MonoBehaviour
     }
 
     // PROCESS WIN/LOSE
+    private void ProcessWinLose()
+    {
+        playerInstances.Clear();
+        playerInstances.AddRange(FindObjectsOfType<PlayerInstance>());
 
-    // ANOUNCE THE RESULT
-
-
+        foreach(PlayerInstance playerInstance in playerInstances)
+        {
+            if (playerInstance.selectedColor == revealedColor)
+                playerInstance.EarnChips();
+            else
+                playerInstance.LoseChips();
+        }
+    }
 }

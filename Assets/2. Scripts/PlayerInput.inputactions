@@ -6,7 +6,7 @@
             "id": "e8e28040-f2d7-4d8e-981e-198852a1ab1f",
             "actions": [
                 {
-                    "name": "AddBet",
+                    "name": "DecideBetAmount",
                     "type": "Button",
                     "id": "9a8ea155-a9b0-46b7-9b27-998bc139e03c",
                     "expectedControlType": "Button",
@@ -14,7 +14,7 @@
                     "interactions": ""
                 },
                 {
-                    "name": "ConfirmBet",
+                    "name": "Bet",
                     "type": "Button",
                     "id": "a3d354fd-88f1-4a22-83bd-97f0f6a318f2",
                     "expectedControlType": "Button",
@@ -46,7 +46,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "AddBet",
+                    "action": "DecideBetAmount",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -57,7 +57,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ConfirmBet",
+                    "action": "Bet",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

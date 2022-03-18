@@ -27,15 +27,26 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     public Transform playerList;
     #endregion
 
+    #region Buttons
+    public GameObject button_play;
+    #endregion
+
     private void Awake()
     {
         lobbyPanel.SetActive(true);
         roomPanel.SetActive(false);
+
+        button_play.SetActive(false);
     }
 
     private void Start()
     {
         PhotonNetwork.JoinLobby(); // Connect to Lobby as connected to server
+    }
+
+    private void Update()
+    {
+        CheckPlayButton();
     }
 
     #region Lobby
@@ -130,12 +141,37 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.CurrentRoom == null)
             return;
 
-        foreach(KeyValuePair<int, Photon.Realtime.Player> playerInfo in PhotonNetwork.CurrentRoom.Players)
+        foreach(KeyValuePair<int, Photon.Realtime.Player> player in PhotonNetwork.CurrentRoom.Players)
         {
             PlayerItem playerItem = Instantiate(pref_playerItem, playerList);
-            playerItem.SetPlayerInfo(playerInfo.Value);
+            playerItem.SetPlayerInfo(player.Value);
+
+            // Indicate the local player
+            if(player.Value == PhotonNetwork.LocalPlayer)
+            {
+                playerItem.ApplyLocalChanges();
+            }
+
             playerItems.Add(playerItem);
         }
+    }
+
+    private void CheckPlayButton()
+    {
+        // Only the master client is allowed to hit the play button
+        if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom.PlayerCount >= 2)
+        {
+            button_play.SetActive(true);
+        }
+        else
+        {
+            button_play.SetActive(false);
+        }
+    }
+
+    public void OnClickPlayButton()
+    {
+        PhotonNetwork.LoadLevel("Game");    // Load the game scene
     }
     #endregion
 }
