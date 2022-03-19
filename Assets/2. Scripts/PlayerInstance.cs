@@ -28,6 +28,10 @@ public class PlayerInstance : MonoBehaviour
 
     #region Input
     PlayerInput playerInput;
+    bool selectGreenInput = false;
+    bool selectRedInput = false;
+    bool decideBetAmountInput = false;
+    bool betInput = false;
     #endregion
 
     private void Start()
@@ -46,10 +50,10 @@ public class PlayerInstance : MonoBehaviour
         {
             playerInput = new PlayerInput();
 
-            playerInput.Bet.SelectGreen.performed += i => SelectGreen();
-            playerInput.Bet.SelectRed.performed += i => SelectRed();
-            playerInput.Bet.DecideBetAmount.performed += i => DecideBetAmout();
-            playerInput.Bet.Bet.started += i => Bet();
+            playerInput.Bet.SelectGreen.performed += i => selectGreenInput = true;
+            playerInput.Bet.SelectRed.performed += i => selectRedInput = true; ;
+            playerInput.Bet.DecideBetAmount.performed += i => decideBetAmountInput = true;
+            playerInput.Bet.Bet.started += i => betInput = true;
         }
 
         playerInput.Enable();
@@ -60,31 +64,46 @@ public class PlayerInstance : MonoBehaviour
         playerInput.Disable();
     }
 
+
+    private void Update()
+    {
+        SelectGreen();
+        SelectRed();
+        DecideBetAmout();
+        Bet();
+    }
+
     private void SelectGreen()
     {
-        if (!hasBet)
+        if (selectGreenInput && !hasBet)
         {
             selectedColor = (int)ColorNames.green;
             Debug.Log("selected green");
             hasSelectedColor = true;
+            selectGreenInput = false;
         }
     }
     private void SelectRed()
     {
-        if (!hasBet)
+        if (selectRedInput && !hasBet)
         {
             selectedColor = (int)ColorNames.red;
             Debug.Log("selected red");
             hasSelectedColor = true;
+            selectRedInput = false;
         }
     }
 
     // DECIDE AMOUNT OF BETTING
     public void DecideBetAmout()
     {
+        if (!decideBetAmountInput)
+            return;
+
         if(!hasSelectedColor)
         {
             dealer.warningEvent.Invoke(dealer.text_betAmount, "Please Select Color");
+            decideBetAmountInput = false;
             return;
         }
 
@@ -92,18 +111,21 @@ public class PlayerInstance : MonoBehaviour
         {
             betAmount += defaultBetAmount;
             dealer.uiEvent.Invoke(dealer.text_betAmount, string.Format("${0}", betAmount));
+            decideBetAmountInput = false;
             return;
         }
 
         else if(!hasBet && betAmount >= currentChipAmount)
         {
             dealer.warningEvent.Invoke(dealer.text_betAmount, "Not Enough Chips");
+            decideBetAmountInput = false;
             return;
         }
 
         else if(hasBet)
         {
             dealer.warningEvent.Invoke(dealer.text_betAmount, "Alreadt bet");
+            decideBetAmountInput = false;
             return;
         }
     }
@@ -111,12 +133,13 @@ public class PlayerInstance : MonoBehaviour
     // BET
     public void Bet()
     {
-        if (hasBet)
+        if (!betInput|| hasBet)
             return;
 
         if (!hasSelectedColor)
         {
             dealer.warningEvent.Invoke(dealer.text_betAmount, "Please Select Color");
+            betInput = false;
             return;
         }
 
@@ -128,6 +151,7 @@ public class PlayerInstance : MonoBehaviour
             dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
 
             hasBet = true;
+            betInput = false;
 
             dealer.betAction();
         }

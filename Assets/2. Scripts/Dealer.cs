@@ -103,15 +103,15 @@ public class Dealer : MonoBehaviourPunCallbacks
                 playerInstance.EarnChips();
             else
                 playerInstance.LoseChips();
-
-            playerInstances.Clear();
-            hasBets.Clear();
         }
+
+        playerInstances.Clear();
+        hasBets.Clear();
     }
 
     private void UpdateUI(TextMeshProUGUI text, string message)
     {
-        text.text += message;
+        text.text = message;
     }
 
     IEnumerator ShowNotification(TextMeshProUGUI targetUI, string message)
