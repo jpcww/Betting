@@ -19,6 +19,8 @@ ScriptsOnlyBuild:
     - Photon.Pun.Demo.PunBasics.PlayerUI
     - Photon.Pun.Demo.SlotRacer.PlayerControl
     - Photon.Pun.Demo.SlotRacer.Utils.SplineWalker
+    PhotonUnityNetworking.Editor.dll:
+    - Photon.Pun.PunSceneSettings
     PhotonUnityNetworking.dll:
     - Photon.Pun.PhotonAnimatorView
     - Photon.Pun.PhotonRigidbodyView
@@ -402,7 +404,7 @@ ScriptsOnlyBuild:
     className: SmoothSyncMovement
   - hash:
       serializedVersion: 2
-      Hash: 54c80c4d957387eebeb0c17627deb955
+      Hash: d1ed9c06ac1b4d707cdf262e7928d0b7
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: PlayerInstance
@@ -1470,7 +1472,7 @@ ScriptsOnlyBuild:
     className: InputActionReference
   - hash:
       serializedVersion: 2
-      Hash: a5eeb9d80ba45da136ed4b005ebaaa69
+      Hash: 53f0682e5901fb6443a9336a274d77d4
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: Dealer

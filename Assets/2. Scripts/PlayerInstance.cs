@@ -26,23 +26,12 @@ public class PlayerInstance : MonoBehaviour
     public bool hasBet = false;
     #endregion
 
-    #region UI
-    public TextMeshProUGUI Text_betAmount;
-    public TextMeshProUGUI Text_moneyAmount;
-    private string warning_SelectColor = "Please Choose your color";
-    private string warning_NotEnoughChip = "Not enough chip to bet";
-    private string warning_AlreadyBet = "Already Bet";
-    #endregion
-
     #region Input
     PlayerInput playerInput;
     #endregion
 
     private void Start()
     {
-        // UI
-        Text_moneyAmount.text += string.Format("${0}", currentChipAmount);
-
         // Dealer
         dealer = FindObjectOfType<Dealer>();
         transform.LookAt(dealer.transform);
@@ -95,26 +84,26 @@ public class PlayerInstance : MonoBehaviour
     {
         if(!hasSelectedColor)
         {
-            StartCoroutine(ShowNotification(Text_betAmount, warning_SelectColor, 1));
+            dealer.warningEvent.Invoke(dealer.text_betAmount, "Please Select Color");
             return;
         }
 
         if (!hasBet && betAmount < currentChipAmount)
         {
             betAmount += defaultBetAmount;
-            Text_betAmount.text = string.Format("${0}", betAmount);
+            dealer.uiEvent.Invoke(dealer.text_betAmount, string.Format("${0}", betAmount));
             return;
         }
 
         else if(!hasBet && betAmount >= currentChipAmount)
         {
-            StartCoroutine(ShowNotification(Text_betAmount, warning_NotEnoughChip, 1));
+            dealer.warningEvent.Invoke(dealer.text_betAmount, "Not Enough Chips");
             return;
         }
 
         else if(hasBet)
         {
-            StartCoroutine(ShowNotification(Text_betAmount, warning_AlreadyBet, 1));
+            dealer.warningEvent.Invoke(dealer.text_betAmount, "Alreadt bet");
             return;
         }
     }
@@ -127,15 +116,16 @@ public class PlayerInstance : MonoBehaviour
 
         if (!hasSelectedColor)
         {
-            StartCoroutine(ShowNotification(Text_betAmount, warning_SelectColor, 1));
+            dealer.warningEvent.Invoke(dealer.text_betAmount, "Please Select Color");
             return;
         }
 
         if (hasSelectedColor)
         {
             currentChipAmount -= betAmount;
-            Text_betAmount.text = "Bet";
-            Text_moneyAmount.text = string.Format("${0}", currentChipAmount);
+            dealer.warningEvent.Invoke(dealer.text_betAmount, "Already Bet");
+            dealer.uiEvent.Invoke(dealer.text_betAmount, string.Format("${0}", betAmount));
+            dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
 
             hasBet = true;
 
@@ -148,8 +138,8 @@ public class PlayerInstance : MonoBehaviour
     {
         Debug.Log(photonView.ViewID + " earn");
         currentChipAmount += betAmount;
-        ShowNotification(Text_moneyAmount, "Win", 1);
-        Text_moneyAmount.text = string.Format("${0}", currentChipAmount);
+        dealer.warningEvent.Invoke(dealer.text_betAmount, "Win!");
+        dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
 
         betAmount = 0;
         hasBet = false;
@@ -160,26 +150,19 @@ public class PlayerInstance : MonoBehaviour
     public void LoseChips()
     {
         Debug.Log(photonView.ViewID + " lose");
-        ShowNotification(Text_moneyAmount, "Lose", 1);
+        dealer.warningEvent.Invoke(dealer.text_betAmount, "Lose!");
+        dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
 
         if (currentChipAmount <= 0)
         {
             currentChipAmount += 100;
-            ShowNotification(Text_moneyAmount, "Good Luck", 1);
-            Text_moneyAmount.text = string.Format("${0}", currentChipAmount);
+            dealer.warningEvent.Invoke(dealer.text_currentAmount, "Good Luck");
+            dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
         }
 
         betAmount = 0;
         hasBet = false;
         hasSelectedColor = false;
         selectedColor = -1;
-    }
-
-    IEnumerator ShowNotification(TextMeshProUGUI targetUI, string message, int time)
-    {
-        string prevText = targetUI.text;
-        targetUI.text = message;
-        yield return new WaitForSeconds(time);
-        targetUI.text = prevText;
     }
 }

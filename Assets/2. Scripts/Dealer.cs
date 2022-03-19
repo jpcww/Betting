@@ -4,6 +4,7 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
+using TMPro;
 
 public enum ColorNames
 {
@@ -20,6 +21,10 @@ public class Dealer : MonoBehaviourPunCallbacks
     #endregion
 
     #region Event
+    public delegate void UIEvent(TextMeshProUGUI text, string message);
+    public delegate IEnumerator WarningEvent(TextMeshProUGUI text, string message);
+    public UIEvent uiEvent;
+    public WarningEvent warningEvent;
     public Action betAction;
     #endregion
 
@@ -28,12 +33,19 @@ public class Dealer : MonoBehaviourPunCallbacks
     List<bool> hasBets = new List<bool>();
     #endregion
 
+    #region UI
+    public TextMeshProUGUI text_currentAmount;
+    public TextMeshProUGUI text_betAmount;
+    #endregion
+
     private void Start()
     {
         material = colorBox.GetComponent<MeshRenderer>().material;
         material.color = Color.grey;
 
         // Event Subscription
+        uiEvent += UpdateUI;
+        warningEvent += ShowNotification;
         betAction += OnPlayerBet;
     }
 
@@ -95,5 +107,18 @@ public class Dealer : MonoBehaviourPunCallbacks
             playerInstances.Clear();
             hasBets.Clear();
         }
+    }
+
+    private void UpdateUI(TextMeshProUGUI text, string message)
+    {
+        text.text += message;
+    }
+
+    IEnumerator ShowNotification(TextMeshProUGUI targetUI, string message)
+    {
+        string prevText = targetUI.text;
+        targetUI.text = message;
+        yield return new WaitForSeconds(1);
+        targetUI.text = prevText;
     }
 }
