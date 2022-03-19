@@ -9,9 +9,12 @@ using Photon.Realtime;
 
 public class PlayerInstance : MonoBehaviour
 {
-    #region GameObject
-    public ExitGames.Client.Photon.Hashtable playerProperties =new ExitGames.Client.Photon.Hashtable();
+    #region Event
     private Dealer dealer;
+    #endregion
+
+    #region Network
+    public PhotonView photonView;
     #endregion
 
     #region Bet
@@ -43,6 +46,9 @@ public class PlayerInstance : MonoBehaviour
         // Dealer
         dealer = FindObjectOfType<Dealer>();
         transform.LookAt(dealer.transform);
+
+        // Network
+        photonView = GetComponent<PhotonView>();
     }
 
     private void OnEnable()
@@ -116,11 +122,15 @@ public class PlayerInstance : MonoBehaviour
     // BET
     public void Bet()
     {
+        if (hasBet)
+            return;
+
         if (!hasSelectedColor)
         {
             StartCoroutine(ShowNotification(Text_betAmount, warning_SelectColor, 1));
             return;
         }
+
         if (hasSelectedColor)
         {
             currentChipAmount -= betAmount;
@@ -129,40 +139,27 @@ public class PlayerInstance : MonoBehaviour
 
             hasBet = true;
 
-            /*
-            // Tell info to Dealer
-            if (!playerProperties.ContainsKey("currentChipAmount"))
-                playerProperties.Add("currentChipAmount", currentChipAmount);
-            else
-                playerProperties["currentChipAmount"] = currentChipAmount;
-
-            if (!playerProperties.ContainsKey("betAmount"))
-                playerProperties.Add("betAmount", betAmount);
-            else
-                playerProperties["betAmount"] = betAmount;
-            */
-            if (!playerProperties.ContainsKey("hasBet"))
-                playerProperties.Add("hasBet", hasBet);
-            else
-                playerProperties["hasBet"] = hasBet;
-
-            PhotonNetwork.SetPlayerCustomProperties(playerProperties);
+            dealer.betAction();
         }
     }
 
     // EARN CHIPS
     public void EarnChips()
     {
+        Debug.Log(photonView.ViewID + " earn");
         currentChipAmount += betAmount;
         ShowNotification(Text_moneyAmount, "Win", 1);
         Text_moneyAmount.text = string.Format("${0}", currentChipAmount);
 
         betAmount = 0;
         hasBet = false;
+        hasSelectedColor = false;
+        selectedColor = -1;
     }
     // LOSE CHIPS
     public void LoseChips()
     {
+        Debug.Log(photonView.ViewID + " lose");
         ShowNotification(Text_moneyAmount, "Lose", 1);
 
         if (currentChipAmount <= 0)
@@ -174,6 +171,8 @@ public class PlayerInstance : MonoBehaviour
 
         betAmount = 0;
         hasBet = false;
+        hasSelectedColor = false;
+        selectedColor = -1;
     }
 
     IEnumerator ShowNotification(TextMeshProUGUI targetUI, string message, int time)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using System;
 
 public enum ColorNames
 {
@@ -12,89 +13,61 @@ public enum ColorNames
 
 public class Dealer : MonoBehaviourPunCallbacks
 {
-    #region Bet
-    private bool allBet = true;
-    #endregion
-
     #region Color Reveal
     public GameObject colorBox;
     public Material material;
     public int revealedColor;
     #endregion
 
+    #region Event
+    public Action betAction;
+    #endregion
+
     #region Player
-    List<PlayerInstance> playerInstances = new List<PlayerInstance>();
+    List<PlayerInstance> playerInstances = new List<PlayerInstance>();  // make it as a list in case players join or leave in the middle
+    List<bool> hasBets = new List<bool>();
     #endregion
 
     private void Start()
     {
         material = colorBox.GetComponent<MeshRenderer>().material;
         material.color = Color.grey;
+
+        // Event Subscription
+        betAction += OnPlayerBet;
     }
 
-    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
+    private void OnPlayerBet()
     {
-        Debug.Log("targetPlayer : " + " " + targetPlayer + " changed props" + changedProps.ToString());
-
         playerInstances.Clear();
         playerInstances.AddRange(FindObjectsOfType<PlayerInstance>());
 
+        hasBets.Clear();
         foreach (PlayerInstance playerInstance in playerInstances)
         {
-            Debug.Log("player instance count : " + playerInstances.Count);
-            if (playerInstance.hasBet == false)
-                allBet = false;
+            Debug.Log(playerInstance.photonView.ViewID + " " +playerInstance.hasBet);
+            hasBets.Add(playerInstance.hasBet);
         }
 
-        if (!allBet)
+        if (hasBets.Contains(false))
         {
-            Debug.Log("allbet false");
-            return;
-        }
-        else if(allBet)
-        {
-            Debug.Log("ready to reveal");
-            RevealColor();
-            ProcessWinLose();
-        }
-
-
-        /*
-        if (!changedProps.ContainsKey("hasBet"))
-        {
-            Debug.Log("no hasBet");
+            Debug.Log("hasBets has false");
             return;
         }
 
         else
         {
-            Debug.Log("hasBet");
-            foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
-            {
-                if((bool)player.CustomProperties["hasBet"] == false)
-                {
-                    allBet = false;
-                }
-            }
-
-            if (allBet == false)
-                return;
-
-            else
-            {
-                Debug.Log("ready to reveal");
-                RevealColor();
-                ProcessWinLose();
-            }
+            Debug.Log("ready to reveal");
+            RevealColor();
+            ProcessWinLose();
         }
-        */
     }
-
+   
     // REAVEAL THE COLOR
     private void RevealColor()
     {
         Debug.Log("reveal color");
-        revealedColor = Random.Range(0, 2);
+        revealedColor = UnityEngine.Random.Range(0, 2);
         Debug.Log("revealed color : " + revealedColor);
 
         // Change the color
@@ -112,15 +85,15 @@ public class Dealer : MonoBehaviourPunCallbacks
     // PROCESS WIN/LOSE
     private void ProcessWinLose()
     {
-        playerInstances.Clear();
-        playerInstances.AddRange(FindObjectsOfType<PlayerInstance>());
-
         foreach(PlayerInstance playerInstance in playerInstances)
         {
             if (playerInstance.selectedColor == revealedColor)
                 playerInstance.EarnChips();
             else
                 playerInstance.LoseChips();
+
+            playerInstances.Clear();
+            hasBets.Clear();
         }
     }
 }
