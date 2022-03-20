@@ -71,9 +71,10 @@
     <Compile Include="Assets\2. Scripts\Network\LobbyManager.cs" />
     <Compile Include="Assets\2. Scripts\Network\PlayerItem.cs" />
     <Compile Include="Assets\2. Scripts\Network\PlayerSpawner.cs" />
+    <Compile Include="Assets\2. Scripts\Network\PlayerUI.cs" />
     <Compile Include="Assets\2. Scripts\Network\RoomItem.cs" />
     <Compile Include="Assets\2. Scripts\PlayerInput.cs" />
-    <Compile Include="Assets\2. Scripts\PlayerInstance.cs" />
+    <Compile Include="Assets\2. Scripts\PlayerManager.cs" />
     <Compile Include="Assets\2. Scripts\Test.cs" />
     <Compile Include="Assets\2. Scripts\Test_ObjectManager.cs" />
     <Compile Include="Assets\Photon\PhotonChat\Demos\Common\EventSystemSpawner.cs" />

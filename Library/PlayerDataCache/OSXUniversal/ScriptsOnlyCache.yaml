@@ -5,9 +5,10 @@ ScriptsOnlyBuild:
     - Dealer
     - LobbyManager
     - MainMenu
-    - PlayerInstance
     - PlayerItem
+    - PlayerManager
     - PlayerSpawner
+    - PlayerUI
     - RoomItem
     PhotonUnityNetworking.Demos.dll:
     - Photon.Pun.Demo.Asteroids.Asteroid
@@ -108,17 +109,21 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 12466}
     - Class: 114
-      Script: {instanceID: 13200}
+      Script: {instanceID: 12666}
     - Class: 114
-      Script: {instanceID: 13482}
+      Script: {instanceID: 13030}
     - Class: 114
-      Script: {instanceID: 13504}
+      Script: {instanceID: 13202}
     - Class: 114
-      Script: {instanceID: 13590}
+      Script: {instanceID: 13484}
     - Class: 114
-      Script: {instanceID: 14010}
+      Script: {instanceID: 13506}
     - Class: 114
-      Script: {instanceID: 14118}
+      Script: {instanceID: 13592}
+    - Class: 114
+      Script: {instanceID: 14012}
+    - Class: 114
+      Script: {instanceID: 14120}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -132,6 +137,8 @@ ScriptsOnlyBuild:
     - Class: 223
       Script: {instanceID: 0}
     - Class: 224
+      Script: {instanceID: 0}
+    - Class: 225
       Script: {instanceID: 0}
     Assets/1. Scenes/Lobby.unity:
     - Class: 1
@@ -177,21 +184,21 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 12532}
     - Class: 114
-      Script: {instanceID: 13010}
+      Script: {instanceID: 13012}
     - Class: 114
-      Script: {instanceID: 13028}
+      Script: {instanceID: 13030}
     - Class: 114
-      Script: {instanceID: 13196}
+      Script: {instanceID: 13198}
     - Class: 114
-      Script: {instanceID: 13200}
+      Script: {instanceID: 13202}
     - Class: 114
-      Script: {instanceID: 13504}
+      Script: {instanceID: 13506}
     - Class: 114
-      Script: {instanceID: 13590}
+      Script: {instanceID: 13592}
     - Class: 114
-      Script: {instanceID: 14118}
+      Script: {instanceID: 14120}
     - Class: 114
-      Script: {instanceID: 14144}
+      Script: {instanceID: 14146}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -282,41 +289,45 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 12606}
     - Class: 114
-      Script: {instanceID: 12694}
+      Script: {instanceID: 12666}
     - Class: 114
-      Script: {instanceID: 12860}
+      Script: {instanceID: 12696}
     - Class: 114
-      Script: {instanceID: 12922}
+      Script: {instanceID: 12862}
     - Class: 114
-      Script: {instanceID: 12938}
+      Script: {instanceID: 12924}
     - Class: 114
-      Script: {instanceID: 13042}
+      Script: {instanceID: 12940}
     - Class: 114
-      Script: {instanceID: 13136}
+      Script: {instanceID: 13030}
     - Class: 114
-      Script: {instanceID: 13148}
+      Script: {instanceID: 13044}
     - Class: 114
-      Script: {instanceID: 13200}
+      Script: {instanceID: 13138}
     - Class: 114
-      Script: {instanceID: 13218}
+      Script: {instanceID: 13150}
     - Class: 114
-      Script: {instanceID: 13396}
+      Script: {instanceID: 13202}
     - Class: 114
-      Script: {instanceID: 13416}
+      Script: {instanceID: 13220}
     - Class: 114
-      Script: {instanceID: 13432}
+      Script: {instanceID: 13398}
     - Class: 114
-      Script: {instanceID: 13504}
+      Script: {instanceID: 13418}
     - Class: 114
-      Script: {instanceID: 13590}
+      Script: {instanceID: 13434}
     - Class: 114
-      Script: {instanceID: 13814}
+      Script: {instanceID: 13506}
     - Class: 114
-      Script: {instanceID: 14010}
+      Script: {instanceID: 13592}
     - Class: 114
-      Script: {instanceID: 14118}
+      Script: {instanceID: 13816}
     - Class: 114
-      Script: {instanceID: 14164}
+      Script: {instanceID: 14012}
+    - Class: 114
+      Script: {instanceID: 14120}
+    - Class: 114
+      Script: {instanceID: 14166}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -404,10 +415,10 @@ ScriptsOnlyBuild:
     className: SmoothSyncMovement
   - hash:
       serializedVersion: 2
-      Hash: d1ed9c06ac1b4d707cdf262e7928d0b7
+      Hash: c208718df1697245934d7f1ed70fab92
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
-    className: PlayerInstance
+    className: PlayerManager
   - hash:
       serializedVersion: 2
       Hash: c42672c997f8be6b1aa86a927ebea785
@@ -1080,6 +1091,12 @@ ScriptsOnlyBuild:
     assemblyName: PhotonUnityNetworking.Demos.dll
     namespaceName: Photon.Pun.Demo.Cockpit
     className: PlayerDetailsController
+  - hash:
+      serializedVersion: 2
+      Hash: 5f507cadce0b271f8b4e7eaa0adfcb01
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: PlayerUI
   - hash:
       serializedVersion: 2
       Hash: cba6cca6bb3290c4c00d709cf63843db

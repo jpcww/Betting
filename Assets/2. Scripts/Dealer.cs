@@ -29,7 +29,7 @@ public class Dealer : MonoBehaviourPunCallbacks
     #endregion
 
     #region Player
-    List<PlayerInstance> playerInstances = new List<PlayerInstance>();  // make it as a list in case players join or leave in the middle
+    List<PlayerManager> playerInstances = new List<PlayerManager>();  // make it as a list in case players join or leave in the middle
     List<bool> hasBets = new List<bool>();
     #endregion
 
@@ -52,10 +52,10 @@ public class Dealer : MonoBehaviourPunCallbacks
     private void OnPlayerBet()
     {
         playerInstances.Clear();
-        playerInstances.AddRange(FindObjectsOfType<PlayerInstance>());
+        playerInstances.AddRange(FindObjectsOfType<PlayerManager>());
 
         hasBets.Clear();
-        foreach (PlayerInstance playerInstance in playerInstances)
+        foreach (PlayerManager playerInstance in playerInstances)
         {
             Debug.Log(playerInstance.photonView.ViewID + " " +playerInstance.hasBet);
             hasBets.Add(playerInstance.hasBet);
@@ -63,24 +63,17 @@ public class Dealer : MonoBehaviourPunCallbacks
 
         if (hasBets.Contains(false))
         {
-            Debug.Log("hasBets has false");
             return;
         }
 
-        else
-        {
-            Debug.Log("ready to reveal");
-            RevealColor();
-            ProcessWinLose();
-        }
+        RevealColor();
+        ProcessWinLose();
     }
    
     // REAVEAL THE COLOR
     private void RevealColor()
     {
-        Debug.Log("reveal color");
         revealedColor = UnityEngine.Random.Range(0, 2);
-        Debug.Log("revealed color : " + revealedColor);
 
         // Change the color
         if (revealedColor == (int)ColorNames.green)
@@ -97,7 +90,7 @@ public class Dealer : MonoBehaviourPunCallbacks
     // PROCESS WIN/LOSE
     private void ProcessWinLose()
     {
-        foreach(PlayerInstance playerInstance in playerInstances)
+        foreach(PlayerManager playerInstance in playerInstances)
         {
             if (playerInstance.selectedColor == revealedColor)
                 playerInstance.EarnChips();
