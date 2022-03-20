@@ -21,7 +21,6 @@ public class RoomItem : MonoBehaviour
 
     public void OnClickRoomItem()
     {
-        Debug.Log("join");
         lobbyManager.JoinRoom(roomName.text);
     }
 }

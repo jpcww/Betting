@@ -17,7 +17,6 @@ public class ConnectToServer : MonoBehaviourPunCallbacks
         if(input_userName.text.Length >= 1) //TODO: add warning message
         {
             PhotonNetwork.NickName = input_userName.text; // Set User Name
-            Debug.Log("username : " + input_userName.text);
             buttonText.text = "CONNECTING.......";
             PhotonNetwork.AutomaticallySyncScene = true;    // Sync loading scenes
             PhotonNetwork.ConnectUsingSettings();   // Connect to server

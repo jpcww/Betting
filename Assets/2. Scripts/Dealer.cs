@@ -14,18 +14,17 @@ public enum ColorNames
 
 public class Dealer : MonoBehaviourPunCallbacks
 {
-    #region Network
-    ExitGames.Client.Photon.Hashtable dealerProperties = new ExitGames.Client.Photon.Hashtable();
-    #endregion
+    //#region Network
+    private ExitGames.Client.Photon.Hashtable dealerProperties = new ExitGames.Client.Photon.Hashtable();
+    //#endregion
 
     #region Color Reveal
     public GameObject colorBox;
     public Material material;
-    public int revealedColor;
+    private int revealedColor;
     #endregion
 
     #region Player
-    List<PlayerManager> playerInstances = new List<PlayerManager>();  // make it as a list in case players join or leave in the middle
     List<bool> hasBets = new List<bool>();
     #endregion
 
@@ -37,7 +36,7 @@ public class Dealer : MonoBehaviourPunCallbacks
     private void Start()
     {
         // Network Communication
-        dealerProperties.Add("revealColor", -1);
+        dealerProperties.Add("revealedColor", -1);
 
         // Color Reveal
         material = colorBox.GetComponent<MeshRenderer>().material;
@@ -51,8 +50,6 @@ public class Dealer : MonoBehaviourPunCallbacks
         // Betting Check
         if(changedProps.ContainsKey("hasBet"))
         {
-            Debug.Log("targetPlayer : " + targetPlayer.NickName);
-
             object hasBet;
             hasBets.Clear();
             foreach (Player player in PhotonNetwork.PlayerList)
@@ -68,36 +65,25 @@ public class Dealer : MonoBehaviourPunCallbacks
     IEnumerator WaitUntilAllBet()
     {
         yield return new WaitUntil(() => hasBets.Count == PhotonNetwork.PlayerList.Length && !hasBets.Contains(false));
-
-        photonView.RPC("RevealColor", RpcTarget.Others);
+        RevealColor();
+        photonView.RPC("AnnounceColor", RpcTarget.All);
     }
 
     // REAVEAL THE COLOR
-    [PunRPC]
     private void RevealColor()
     {
         revealedColor = UnityEngine.Random.Range(0, 2);
-        Debug.Log("revealed color : " + revealedColor);
-        dealerProperties["revealedColor"] = revealedColor;
 
+        dealerProperties["revealedColor"] = revealedColor;
+        PhotonNetwork.SetPlayerCustomProperties(dealerProperties);
+    }
+
+    [PunRPC]
+    private void AnnounceColor()
+    {
         if (revealedColor == (int)ColorNames.green)
             material.color = Color.green;
         else if (revealedColor == (int)ColorNames.red)
             material.color = Color.red;
-    }
-
-    // PROCESS WIN/LOSE
-    private void ProcessWinLose()
-    {
-        foreach(PlayerManager playerInstance in playerInstances)
-        {
-            if (playerInstance.selectedColor == revealedColor)
-                playerInstance.EarnChips();
-            else
-                playerInstance.LoseChips();
-        }
-
-        playerInstances.Clear();
-        hasBets.Clear();
     }
 }

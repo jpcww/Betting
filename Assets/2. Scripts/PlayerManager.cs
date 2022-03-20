@@ -18,7 +18,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     #endregion
 
     #region Network
-    public ExitGames.Client.Photon.Hashtable playerProperties = new ExitGames.Client.Photon.Hashtable();
+    private ExitGames.Client.Photon.Hashtable playerProperties = new ExitGames.Client.Photon.Hashtable();
     #endregion
 
     #region Bet
@@ -89,6 +89,16 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         SelectRed();
         DecideBetAmout();
         Bet();
+    }
+
+    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
+    {
+        Debug.Log("target player : " + targetPlayer.NickName);
+        if (changedProps.ContainsKey("revealedColor"))
+        {
+            ProcessWinLose((int)changedProps["revealedColor"]);
+            Debug.Log("revealed color in the property : " + (int)changedProps["revealedColor"]);
+        }
     }
 
     private void SelectGreen()
@@ -193,6 +203,24 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             playerProperties["hasBet"] = hasBet;
             PhotonNetwork.SetPlayerCustomProperties(playerProperties);
         }
+    }
+
+    // PROCESS WIN/LOSE
+    private void ProcessWinLose(int revealedColor)
+    {
+        if(revealedColor == selectedColor)
+        {
+            EarnChips();
+        }
+
+        else
+        {
+            LoseChips();
+        }
+
+        hasSelectedColor = false;
+        hasBet = false;
+        playerProperties["hasBet"] = hasBet;
     }
 
     // EARN CHIPS

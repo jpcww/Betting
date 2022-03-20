@@ -1491,7 +1491,7 @@ ScriptsOnlyBuild:
     className: InputActionReference
   - hash:
       serializedVersion: 2
-      Hash: 53f0682e5901fb6443a9336a274d77d4
+      Hash: a861082292f890583ddbd0bd32d0974a
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: Dealer
