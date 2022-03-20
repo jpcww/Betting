@@ -105,6 +105,8 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 11320}
     - Class: 114
+      Script: {instanceID: 11608}
+    - Class: 114
       Script: {instanceID: 12212}
     - Class: 114
       Script: {instanceID: 12466}
@@ -415,7 +417,7 @@ ScriptsOnlyBuild:
     className: SmoothSyncMovement
   - hash:
       serializedVersion: 2
-      Hash: c208718df1697245934d7f1ed70fab92
+      Hash: 6826c525b474a410303afbf6428dce3b
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: PlayerManager
@@ -1093,7 +1095,7 @@ ScriptsOnlyBuild:
     className: PlayerDetailsController
   - hash:
       serializedVersion: 2
-      Hash: 5f507cadce0b271f8b4e7eaa0adfcb01
+      Hash: c0b638696ffbe19cae96d36e9e7087f9
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: PlayerUI

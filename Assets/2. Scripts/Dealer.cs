@@ -14,18 +14,14 @@ public enum ColorNames
 
 public class Dealer : MonoBehaviourPunCallbacks
 {
+    #region Network
+    ExitGames.Client.Photon.Hashtable dealerProperties = new ExitGames.Client.Photon.Hashtable();
+    #endregion
+
     #region Color Reveal
     public GameObject colorBox;
     public Material material;
     public int revealedColor;
-    #endregion
-
-    #region Event
-    public delegate void UIEvent(TextMeshProUGUI text, string message);
-    public delegate IEnumerator WarningEvent(TextMeshProUGUI text, string message);
-    public UIEvent uiEvent;
-    public WarningEvent warningEvent;
-    public Action betAction;
     #endregion
 
     #region Player
@@ -40,51 +36,54 @@ public class Dealer : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        // Network Communication
+        dealerProperties.Add("revealColor", -1);
+
+        // Color Reveal
         material = colorBox.GetComponent<MeshRenderer>().material;
         material.color = Color.grey;
 
-        // Event Subscription
-        uiEvent += UpdateUI;
-        warningEvent += ShowNotification;
-        betAction += OnPlayerBet;
+        StartCoroutine(WaitUntilAllBet());
     }
 
-    private void OnPlayerBet()
+    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
     {
-        playerInstances.Clear();
-        playerInstances.AddRange(FindObjectsOfType<PlayerManager>());
-
-        hasBets.Clear();
-        foreach (PlayerManager playerInstance in playerInstances)
+        // Betting Check
+        if(changedProps.ContainsKey("hasBet"))
         {
-            Debug.Log(playerInstance.photonView.ViewID + " " +playerInstance.hasBet);
-            hasBets.Add(playerInstance.hasBet);
-        }
+            Debug.Log("targetPlayer : " + targetPlayer.NickName);
 
-        if (hasBets.Contains(false))
-        {
-            return;
+            object hasBet;
+            hasBets.Clear();
+            foreach (Player player in PhotonNetwork.PlayerList)
+            {
+                if(player.CustomProperties.TryGetValue("hasBet", out hasBet))
+                {
+                    hasBets.Add((bool)hasBet);
+                }
+            }
         }
-
-        RevealColor();
-        ProcessWinLose();
     }
-   
+
+    IEnumerator WaitUntilAllBet()
+    {
+        yield return new WaitUntil(() => hasBets.Count == PhotonNetwork.PlayerList.Length && !hasBets.Contains(false));
+
+        photonView.RPC("RevealColor", RpcTarget.Others);
+    }
+
     // REAVEAL THE COLOR
+    [PunRPC]
     private void RevealColor()
     {
         revealedColor = UnityEngine.Random.Range(0, 2);
+        Debug.Log("revealed color : " + revealedColor);
+        dealerProperties["revealedColor"] = revealedColor;
 
-        // Change the color
         if (revealedColor == (int)ColorNames.green)
-        {
             material.color = Color.green;
-        }
-
-        else
-        {
+        else if (revealedColor == (int)ColorNames.red)
             material.color = Color.red;
-        }
     }
 
     // PROCESS WIN/LOSE
@@ -100,18 +99,5 @@ public class Dealer : MonoBehaviourPunCallbacks
 
         playerInstances.Clear();
         hasBets.Clear();
-    }
-
-    private void UpdateUI(TextMeshProUGUI text, string message)
-    {
-        text.text = message;
-    }
-
-    IEnumerator ShowNotification(TextMeshProUGUI targetUI, string message)
-    {
-        string prevText = targetUI.text;
-        targetUI.text = message;
-        yield return new WaitForSeconds(1);
-        targetUI.text = prevText;
     }
 }

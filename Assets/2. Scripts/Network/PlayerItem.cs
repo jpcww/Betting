@@ -17,7 +17,7 @@ public class PlayerItem : MonoBehaviour
         image = GetComponent<Image>();
     }
 
-    public void SetPlayerInfo(Photon.Realtime.Player player)
+    public void SetPlayerInfo(Player player)
     {
         playerName.text = player.NickName;
     }

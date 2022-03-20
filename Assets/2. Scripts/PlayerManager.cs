@@ -7,18 +7,18 @@ using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : MonoBehaviourPunCallbacks
 {
+    #region UI
+    PlayerUI playerUI;
+    #endregion
+
     #region Event
     private Dealer dealer;
     #endregion
 
-    #region UI
-    public GameObject pref_playerUI;
-    #endregion
-
     #region Network
-    public PhotonView photonView;
+    public ExitGames.Client.Photon.Hashtable playerProperties = new ExitGames.Client.Photon.Hashtable();
     #endregion
 
     #region Bet
@@ -44,14 +44,25 @@ public class PlayerManager : MonoBehaviour
         dealer = FindObjectOfType<Dealer>();
         transform.LookAt(dealer.transform);
 
-        // Network
-        photonView = GetComponent<PhotonView>();
-
         // UI
-        //InstantiatePlayerUI();
+        playerUI = GetComponentInChildren<PlayerUI>();
+        playerUI.SetUserName(photonView.Owner.NickName);
+        playerUI.SetColor(Color.gray);
+
+        // Network Communication
+        playerProperties.Add("selectedColor", -1);
+        playerProperties.Add("betAmount", betAmount);
+        playerProperties.Add("hasBet", hasBet);
+        /*
+        foreach (PlayerUI playerUI in FindObjectsOfType<PlayerUI>())
+        {
+            if (!playerUI.GetComponentInParent<PhotonView>().IsMine)
+                playerUI.gameObject.SetActive(false);
+        }
+        */
     }
 
-    private void OnEnable()
+    public override void OnEnable()
     {
         if (playerInput == null)
         {
@@ -66,43 +77,50 @@ public class PlayerManager : MonoBehaviour
         playerInput.Enable();
     }
 
-    private void OnDisable()
+    public override void OnDisable()
     {
         playerInput.Disable();
     }
 
-
     private void Update()
     {
+        // Input
         SelectGreen();
         SelectRed();
         DecideBetAmout();
         Bet();
     }
 
-    private void InstantiatePlayerUI()
-    {
-        GameObject playerUIGO = Instantiate(pref_playerUI);
-        PlayerUI playerUI = playerUIGO.GetComponent<PlayerUI>();
-        playerUI.SetPlayer(this, photonView.Controller.NickName);
-    }
-
     private void SelectGreen()
     {
-        if (selectGreenInput && !hasBet)
+        if (!selectGreenInput)
+            return;
+
+        if (!hasBet)
         {
             selectedColor = (int)ColorNames.green;
-            Debug.Log("selected green");
+            playerUI.SetColor(Color.green);
+
+            // Network communication
+            playerProperties["selectedColor"] = (int)ColorNames.green;
+
             hasSelectedColor = true;
             selectGreenInput = false;
         }
     }
     private void SelectRed()
     {
-        if (selectRedInput && !hasBet)
+        if (!selectRedInput)
+            return;
+
+        if (!hasBet)
         {
             selectedColor = (int)ColorNames.red;
-            Debug.Log("selected red");
+            playerUI.SetColor(Color.red);
+
+            // Network communication
+            playerProperties["selectedColor"] = (int)ColorNames.red;
+
             hasSelectedColor = true;
             selectRedInput = false;
         }
@@ -116,7 +134,7 @@ public class PlayerManager : MonoBehaviour
 
         if(!hasSelectedColor)
         {
-            dealer.warningEvent.Invoke(dealer.text_betAmount, "Please Select Color");
+            playerUI.DisplayWarningMessage("Please Select Color");
             decideBetAmountInput = false;
             return;
         }
@@ -124,21 +142,25 @@ public class PlayerManager : MonoBehaviour
         if (!hasBet && betAmount < currentChipAmount)
         {
             betAmount += defaultBetAmount;
-            dealer.uiEvent.Invoke(dealer.text_betAmount, string.Format("${0}", betAmount));
+            playerUI.DisplayBetAmount(string.Format("Bet Amount : ${0}", betAmount));
+
+            // Network communication
+            playerProperties["betAmount"] = betAmount;
+
             decideBetAmountInput = false;
             return;
         }
 
         else if(!hasBet && betAmount >= currentChipAmount)
         {
-            dealer.warningEvent.Invoke(dealer.text_betAmount, "Not Enough Chips");
+            playerUI.DisplayWarningMessage("Not Enough Chips");
             decideBetAmountInput = false;
             return;
         }
 
         else if(hasBet)
         {
-            dealer.warningEvent.Invoke(dealer.text_betAmount, "Alreadt bet");
+            playerUI.DisplayWarningMessage("Already Bet");
             decideBetAmountInput = false;
             return;
         }
@@ -152,33 +174,36 @@ public class PlayerManager : MonoBehaviour
 
         if (!hasSelectedColor)
         {
-            dealer.warningEvent.Invoke(dealer.text_betAmount, "Please Select Color");
+            playerUI.DisplayWarningMessage("Please Select Color");
             betInput = false;
             return;
         }
 
         if (hasSelectedColor)
         {
+            // UI
             currentChipAmount -= betAmount;
-            dealer.warningEvent.Invoke(dealer.text_betAmount, "Already Bet");
-            dealer.uiEvent.Invoke(dealer.text_betAmount, string.Format("${0}", betAmount));
-            dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
+            playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
 
+            // Initialize UI
             hasBet = true;
             betInput = false;
 
-            dealer.betAction();
+            // Network communication
+            playerProperties["hasBet"] = hasBet;
+            PhotonNetwork.SetPlayerCustomProperties(playerProperties);
         }
     }
 
     // EARN CHIPS
     public void EarnChips()
     {
-        Debug.Log(photonView.ViewID + " earn");
+        // UI
         currentChipAmount += betAmount;
-        dealer.warningEvent.Invoke(dealer.text_betAmount, "Win!");
-        dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
+        playerUI.DisplayWinLose(true);
+        playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
 
+        // Initialize Flags
         betAmount = 0;
         hasBet = false;
         hasSelectedColor = false;
@@ -187,15 +212,13 @@ public class PlayerManager : MonoBehaviour
     // LOSE CHIPS
     public void LoseChips()
     {
-        Debug.Log(photonView.ViewID + " lose");
-        dealer.warningEvent.Invoke(dealer.text_betAmount, "Lose!");
-        dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
+        playerUI.DisplayWinLose(false);
+        playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
 
         if (currentChipAmount <= 0)
         {
             currentChipAmount += 100;
-            dealer.warningEvent.Invoke(dealer.text_currentAmount, "Good Luck");
-            dealer.uiEvent.Invoke(dealer.text_currentAmount, string.Format("${0}", currentChipAmount));
+            // TODO: CHIP REFILL ANIMATION/INSTANTIATION
         }
 
         betAmount = 0;

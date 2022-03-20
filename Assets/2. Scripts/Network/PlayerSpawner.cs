@@ -10,7 +10,7 @@ public class PlayerSpawner : MonoBehaviour
 
     private void Start()
     {
-        Transform seat = seats[PhotonNetwork.LocalPlayer.ActorNumber-1];
+        Transform seat = seats[PhotonNetwork.LocalPlayer.ActorNumber - 1];
         PhotonNetwork.Instantiate("Player", seat.position, Quaternion.identity);
     }
 }

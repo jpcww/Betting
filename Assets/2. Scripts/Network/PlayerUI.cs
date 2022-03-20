@@ -9,35 +9,66 @@ public class PlayerUI : MonoBehaviour
     public TextMeshProUGUI text_playerName;
     public TextMeshProUGUI text_currentAmount;
     public TextMeshProUGUI text_betAmount;
+    public Image image_selectedcolor;
+    public TextMeshProUGUI text_winLose;
 
-    private PlayerManager playerManager;
-
-    private void Awake()
+    private void Start()
     {
-        GetComponent<Transform>().SetParent(GameObject.FindGameObjectWithTag("Canvas").GetComponent<Transform>());
+        text_winLose.gameObject.SetActive(false);
     }
 
-    private void Update()
+    public void SetUserName(string userName)
     {
-        if(playerManager == null)
+        text_playerName.text = userName;
+    }
+
+    public void SetColor(Color color)
+    {
+        image_selectedcolor.color = color;
+    }
+
+    public void DisplayBetAmount(string message)
+    {
+        text_betAmount.text = message;
+    }
+
+    public void DisplayWarningMessage(string message)
+    {
+        StartCoroutine(ExchangeMessage(text_betAmount, message));
+    }
+
+    public void DisplayerCurrentChipAmount(string message)
+    {
+        text_currentAmount.text = message;
+    }
+
+    public void DisplayWinLose(bool win)
+    {
+        if(win)
         {
-            Destroy(this.gameObject);
-            return;
+            Debug.Log("Win");
+            ShowNotification(text_winLose, "WIN");
+        }
+        else
+        {
+            Debug.Log("lose");
+            ShowNotification(text_winLose, "LOSE");
         }
     }
 
-    public void SetPlayer(PlayerManager playerManager, string playerName)
+    IEnumerator ExchangeMessage(TextMeshProUGUI targetUI, string message)
     {
-        if (playerManager == null)
-        {
-            return;
-        }
+        string prevText = targetUI.text;
+        targetUI.text = message;
+        yield return new WaitForSeconds(1);
+        targetUI.text = prevText;
+    }
 
-        this.playerManager = playerManager;
-
-        if (text_playerName != null)
-        {
-            text_playerName.text = playerName;// TODO: check if the name is right
-        }
+    IEnumerator ShowNotification(TextMeshProUGUI targetUI, string message)
+    {
+        targetUI.gameObject.SetActive(true);
+        targetUI.text = message;
+        yield return new WaitForSeconds(2);
+        targetUI.gameObject.SetActive(false);
     }
 }
