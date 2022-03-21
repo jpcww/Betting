@@ -6,11 +6,12 @@ using Photon.Realtime;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using System;
 using TMPro;
+using UnityEngine.SceneManagement;
 
-public enum ColorNames
+public enum Colors
 {
     green,
-    red
+    red,
 }
 
 public class Dealer : MonoBehaviourPunCallbacks
@@ -97,9 +98,9 @@ public class Dealer : MonoBehaviourPunCallbacks
     private void AnnounceColor()
     {
         Debug.Log("AnnounceColor : " + revealedColor);
-        if (revealedColor == (int)ColorNames.green)
+        if (revealedColor == (int)Colors.green)
             material.color = Color.green;
-        else if (revealedColor == (int)ColorNames.red)
+        else if (revealedColor == (int)Colors.red)
             material.color = Color.red;
     }
 }

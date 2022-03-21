@@ -1,6 +1,7 @@
 ScriptsOnlyBuild:
   usedScripts:
     Assembly-CSharp.dll:
+    - Chip
     - ConnectToServer
     - Dealer
     - LobbyManager
@@ -20,6 +21,8 @@ ScriptsOnlyBuild:
     - Photon.Pun.Demo.PunBasics.PlayerUI
     - Photon.Pun.Demo.SlotRacer.PlayerControl
     - Photon.Pun.Demo.SlotRacer.Utils.SplineWalker
+    PhotonUnityNetworking.Editor.dll:
+    - Photon.Pun.PunSceneSettings
     PhotonUnityNetworking.dll:
     - Photon.Pun.PhotonAnimatorView
     - Photon.Pun.PhotonRigidbodyView
@@ -74,8 +77,6 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 4
       Script: {instanceID: 0}
-    - Class: 20
-      Script: {instanceID: 0}
     - Class: 21
       Script: {instanceID: 0}
     - Class: 23
@@ -92,32 +93,18 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 65
       Script: {instanceID: 0}
-    - Class: 81
-      Script: {instanceID: 0}
     - Class: 104
       Script: {instanceID: 0}
     - Class: 108
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 11276}
-    - Class: 114
       Script: {instanceID: 11302}
-    - Class: 114
-      Script: {instanceID: 11322}
-    - Class: 114
-      Script: {instanceID: 11610}
     - Class: 114
       Script: {instanceID: 12214}
     - Class: 114
       Script: {instanceID: 12468}
     - Class: 114
-      Script: {instanceID: 12668}
-    - Class: 114
-      Script: {instanceID: 13202}
-    - Class: 114
       Script: {instanceID: 13484}
-    - Class: 114
-      Script: {instanceID: 13506}
     - Class: 114
       Script: {instanceID: 13592}
     - Class: 114
@@ -126,19 +113,13 @@ ScriptsOnlyBuild:
       Script: {instanceID: 14120}
     - Class: 115
       Script: {instanceID: 0}
-    - Class: 128
-      Script: {instanceID: 0}
     - Class: 157
       Script: {instanceID: 0}
     - Class: 196
       Script: {instanceID: 0}
-    - Class: 222
-      Script: {instanceID: 0}
     - Class: 223
       Script: {instanceID: 0}
     - Class: 224
-      Script: {instanceID: 0}
-    - Class: 225
       Script: {instanceID: 0}
     Assets/1. Scenes/Lobby.unity:
     - Class: 1
@@ -289,6 +270,8 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 12312}
     - Class: 114
+      Script: {instanceID: 12396}
+    - Class: 114
       Script: {instanceID: 12608}
     - Class: 114
       Script: {instanceID: 12668}
@@ -423,7 +406,7 @@ ScriptsOnlyBuild:
     className: SmoothSyncMovement
   - hash:
       serializedVersion: 2
-      Hash: 6826c525b474a410303afbf6428dce3b
+      Hash: 675c9ba5f7779c58de161e2d094e9a5a
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: PlayerManager
@@ -999,7 +982,7 @@ ScriptsOnlyBuild:
     className: PlayerInputEditor
   - hash:
       serializedVersion: 2
-      Hash: aa57e37b6c564d80ca1f01676b6ff95b
+      Hash: a576d5d5df24935091371493e2b74e2f
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: PlayerSpawner

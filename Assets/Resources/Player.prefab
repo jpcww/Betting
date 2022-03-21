@@ -172,7 +172,7 @@ Camera:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 484822006443993360}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
@@ -263,7 +263,7 @@ Canvas:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4348462837039124095}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_RenderMode: 0
   m_Camera: {fileID: 0}
@@ -328,8 +328,8 @@ GameObject:
   - component: {fileID: 3432582916542563912}
   - component: {fileID: 4138775330118759579}
   - component: {fileID: 3757615956182253895}
-  - component: {fileID: 7542729669643230473}
   - component: {fileID: -8573813673424164796}
+  - component: {fileID: 7061321862450605058}
   m_Layer: 11
   m_Name: Player
   m_TagString: Player
@@ -413,22 +413,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7542729669643230473
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8403262909197629410}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 715775305f19043de8fbc96d151039af, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  selectedColor: 0
-  currentChipAmount: 100
-  betAmount: 0
-  hasBet: 0
 --- !u!114 &-8573813673424164796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -444,13 +428,32 @@ MonoBehaviour:
   ObservedComponentsFoldoutOpen: 1
   Group: 0
   prefixField: -1
-  Synchronization: 3
+  Synchronization: 1
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents: []
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &7061321862450605058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8403262909197629410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 715775305f19043de8fbc96d151039af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInstance: {fileID: 0}
+  dealer: {fileID: 0}
+  selectedColor: 0
+  currentChipAmount: 100
+  betAmount: 0
+  hasBet: 0
+  table: {fileID: 0}
 --- !u!1001 &4335958989914982764
 PrefabInstance:
   m_ObjectHideFlags: 0
