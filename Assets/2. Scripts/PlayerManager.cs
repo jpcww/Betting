@@ -19,6 +19,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
 
     #region Network
     private ExitGames.Client.Photon.Hashtable playerProperties = new ExitGames.Client.Photon.Hashtable();
+
     #endregion
 
     #region Bet
@@ -41,8 +42,8 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         // Dealer
-        dealer = FindObjectOfType<Dealer>();
-        transform.LookAt(dealer.transform);
+        StartCoroutine(WaitForDealer());
+        StartCoroutine(WaitForRevealedColor());
 
         // UI
         playerUI = GetComponentInChildren<PlayerUI>();
@@ -53,13 +54,14 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         playerProperties.Add("selectedColor", -1);
         playerProperties.Add("betAmount", betAmount);
         playerProperties.Add("hasBet", hasBet);
-        /*
+        playerProperties.Add("hasReceivedColor", false);
+        playerProperties.Add("hasProcessedWinLose", false);
+        
         foreach (PlayerUI playerUI in FindObjectsOfType<PlayerUI>())
         {
             if (!playerUI.GetComponentInParent<PhotonView>().IsMine)
-                playerUI.gameObject.SetActive(false);
+                playerUI.GetComponentInParent<Canvas>().enabled = false;
         }
-        */
     }
 
     public override void OnEnable()
@@ -91,16 +93,38 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         Bet();
     }
 
-    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
+    /*
+    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
     {
-        Debug.Log("target player : " + targetPlayer.NickName);
-        if (changedProps.ContainsKey("revealedColor"))
+        Debug.Log("room properties");
+        if (propertiesThatChanged.ContainsKey("revealedColor"))
         {
-            ProcessWinLose((int)changedProps["revealedColor"]);
-            Debug.Log("revealed color in the property : " + (int)changedProps["revealedColor"]);
+            ProcessWinLose((int)propertiesThatChanged["revealedColor"]);
+            
+            Debug.Log("revealed color in the property : " + (int)propertiesThatChanged["revealedColor"]);
         }
     }
+    */
+    
 
+    IEnumerator WaitForDealer()
+    {
+        yield return new WaitUntil(() => FindObjectOfType<Dealer>() != null);
+        dealer = FindObjectOfType<Dealer>();
+        transform.LookAt(dealer.transform);
+    }
+
+    public IEnumerator WaitForRevealedColor()
+    {
+        yield return new WaitUntil(() => playerProperties.ContainsKey("hasReceivedColor") && (bool)playerProperties["hasReceivedColor"] == false && PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("hasRevealedColor") && (bool)PhotonNetwork.CurrentRoom.CustomProperties["hasRevealedColor"] == true);
+
+        playerProperties["hasReceivedColor"] = true;
+        PhotonNetwork.SetPlayerCustomProperties(playerProperties);
+
+        ProcessWinLose((int)PhotonNetwork.CurrentRoom.CustomProperties["revealedColor"]);
+    }
+
+    // SELECT COLORS
     private void SelectGreen()
     {
         if (!selectGreenInput)
@@ -208,6 +232,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     // PROCESS WIN/LOSE
     private void ProcessWinLose(int revealedColor)
     {
+        Debug.Log("ProcessWinLose");
         if(revealedColor == selectedColor)
         {
             EarnChips();
@@ -221,6 +246,12 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         hasSelectedColor = false;
         hasBet = false;
         playerProperties["hasBet"] = hasBet;
+        playerProperties["hasReceivedColor"] = false;
+        PhotonNetwork.SetPlayerCustomProperties(playerProperties);  // It seems to take time to update through the server
+
+        // Reinitialize Coroutine in Dealer
+        StartCoroutine(dealer.WaitUntilAllBet());
+        StartCoroutine(WaitForRevealedColor());
     }
 
     // EARN CHIPS
@@ -231,7 +262,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         playerUI.DisplayWinLose(true);
         playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
 
-        // Initialize Flags
+        // Reinitialize Flags
         betAmount = 0;
         hasBet = false;
         hasSelectedColor = false;
@@ -249,6 +280,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             // TODO: CHIP REFILL ANIMATION/INSTANTIATION
         }
 
+        // Reinitialize Flags
         betAmount = 0;
         hasBet = false;
         hasSelectedColor = false;

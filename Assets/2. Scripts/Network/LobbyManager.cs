@@ -159,7 +159,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     private void CheckPlayButton()
     {
         // Only the master client is allowed to hit the play button
-        if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom.PlayerCount >= 2)
+        if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom.PlayerCount >= 1)
         {
             button_play.SetActive(true);
         }

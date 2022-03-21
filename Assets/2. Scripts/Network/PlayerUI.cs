@@ -47,12 +47,12 @@ public class PlayerUI : MonoBehaviour
         if(win)
         {
             Debug.Log("Win");
-            ShowNotification(text_winLose, "WIN");
+            StartCoroutine(ShowNotification(text_winLose, "WIN"));
         }
         else
         {
             Debug.Log("lose");
-            ShowNotification(text_winLose, "LOSE");
+            StartCoroutine(ShowNotification(text_winLose, "LOSE"));
         }
     }
 
