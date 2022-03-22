@@ -7,26 +7,20 @@ using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : MonoBehaviourPunCallbacks
 {
-    #region Player
-    public GameObject playerInstance;
-    private PhotonView photonView;
-    #endregion
-
     #region UI
     PlayerUI playerUI;
     #endregion
 
-    #region Event
-    public Dealer dealer;
-    #endregion
-
     #region Network
     private ExitGames.Client.Photon.Hashtable playerProperties = new ExitGames.Client.Photon.Hashtable();
+
+    public const byte PlayerInitiatedEventCode = 1;
     #endregion
 
     #region Bet
+    public Dealer dealer;
     public int selectedColor;
     private bool hasSelectedColor = false;
     public int currentChipAmount = 100;
@@ -44,29 +38,20 @@ public class PlayerManager : MonoBehaviour
     #endregion
 
     #region Coin
-    public Transform table;
-    private List<GameObject> ownedChips = new List<GameObject>();
-    private List<GameObject> betChips = new List<GameObject>();
-    private List<GameObject> removedOwnedChips = new List<GameObject>();
-    private List<GameObject> removedBetChips = new List<GameObject>();
-
-    private Vector3 coinPosition = new Vector3(0, 0.1f, 0);
-    private Vector3 xVector = new Vector3(0.1f, 0, 0);
-    private Vector3 zVector = new Vector3(0, 0, 0.1f);
+    public Transform transForm_availableChips;
+    public Transform transForm_betChips;
+    public List<GameObject> ownedChips = new List<GameObject>();
+    public List<GameObject> betChips = new List<GameObject>();
+    public List<GameObject> removedOwnedChips = new List<GameObject>();
+    public List<GameObject> removedBetChips = new List<GameObject>();
     #endregion
-
-    private void Awake()
-    {
-        photonView = GetComponent<PhotonView>();
-    }
 
     private void Start()
     {
         InitiatePlayer();
     }
 
-    
-    private void OnEnable()
+    public override void OnEnable()
     {
         if (photonView.IsMine)
         {
@@ -84,7 +69,7 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private void OnDisable()
+    public override void OnDisable()
     {
         if(photonView.IsMine)
             playerInput.Disable();
@@ -102,41 +87,16 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    /*
-    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
-    {
-        Debug.Log("room properties");
-        if (propertiesThatChanged.ContainsKey("revealedColor"))
-        {
-            ProcessWinLose((int)propertiesThatChanged["revealedColor"]);
-            
-            Debug.Log("revealed color in the property : " + (int)propertiesThatChanged["revealedColor"]);
-        }
-    }
-    */
-
     private void InitiatePlayer()
     {
-        // PlAYER
+        // PLAYER
         if(photonView.IsMine)
         {
             // Dealer
             dealer = PhotonView.Find(1).gameObject.GetComponent<Dealer>();
 
-            int seamNumber = photonView.ViewID % 3;
-            playerInstance = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
-            playerInstance.transform.SetParent(PlayerSpawner.playerSpawner.seats[seamNumber].transform);
-            playerInstance.transform.localPosition = Vector3.zero;
-            playerInstance.transform.LookAt(dealer.transform);
-            playerInstance.GetComponentInChildren<Camera>().enabled = true;
-            playerInstance.GetComponentInChildren<Canvas>().enabled = true;
-
-            // CHIPS
-            //table = playerInstance.transform.parent.parent;
-            //InstantiateChips();
-
             // UI
-            playerUI = playerInstance.GetComponentInChildren<PlayerUI>();
+            playerUI = GetComponentInChildren<PlayerUI>();
             playerUI.SetUserName(photonView.Owner.NickName);
             playerUI.SetColor(Color.gray);
 
@@ -146,11 +106,19 @@ public class PlayerManager : MonoBehaviour
             playerProperties.Add("hasBet", hasBet);
             playerProperties.Add("hasReceivedColor", false);
             playerProperties.Add("hasProcessedWinLose", false);
+            StartCoroutine(WaitForRevealedColor()); // REPLACE WITH EVENT
 
-            StartCoroutine(WaitForRevealedColor());
+            PlayerInstantiatedEvent();
         }
     }
 
+    private void PlayerInstantiatedEvent()
+    {
+        int photonViewID = photonView.ViewID;
+        RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        PhotonNetwork.RaiseEvent(PlayerInitiatedEventCode, photonViewID, raiseEventOptions, ExitGames.Client.Photon.SendOptions.SendReliable);
+        Debug.Log("event raised");
+    }
 
     public IEnumerator WaitForRevealedColor()
     {
@@ -333,85 +301,6 @@ public class PlayerManager : MonoBehaviour
         hasBet = false;
         hasSelectedColor = false;
         selectedColor = -1;
-    }
-
-    public void InstantiateChips()
-    {
-        Color color = new Color();
-
-        for (int i = 0; i < 10; i++)
-        {
-            // MY CHIPS
-            // Instantiate
-            GameObject myChipStack = PhotonNetwork.InstantiateRoomObject("ChipStack", Vector3.zero, Quaternion.identity);
-            myChipStack.transform.SetParent(table.GetChild(1));
-            PhotonView photonView_chipStack = myChipStack.GetPhotonView();
-            photonView_chipStack.TransferOwnership(PhotonNetwork.LocalPlayer);
-
-            // Position
-            if (i < 5)
-                myChipStack.transform.localPosition = coinPosition - xVector * i;
-            else
-                myChipStack.transform.localPosition = coinPosition - zVector - xVector * (i - 5);
-
-            // Color
-            int colorNumber = UnityEngine.Random.Range(0, 11);
-            Renderer myChipRenderer = myChipStack.GetComponent<Renderer>();
-            switch (colorNumber)
-            {
-                case 0:
-                    color = Color.green;
-                    break;
-                case 1:
-                    color = Color.red;
-                    break;
-                case 2:
-                    color = Color.blue;
-                    break;
-                case 3:
-                    color = Color.black;
-                    break;
-                case 4:
-                    color = Color.cyan;
-                    break;
-                case 5:
-                    color = Color.white;
-                    break;
-                case 6:
-                    color = Color.gray;
-                    break;
-                case 7:
-                    color = Color.yellow;
-                    break;
-                case 8:
-                    color = Color.magenta;
-                    break;
-                case 9:
-                    color = Color.HSVToRGB(63, 183, 209);
-                    break;
-            }
-
-            myChipRenderer.material.color = color;
-
-            ownedChips.Add(myChipStack);
-
-            // BET CHIPS
-            // Instantiate
-            GameObject chipStack = PhotonNetwork.InstantiateRoomObject("ChipStack", Vector3.zero, Quaternion.identity);
-            chipStack.transform.SetParent(table.GetChild(2));
-
-            // Position
-            if (i < 5)
-                chipStack.transform.localPosition = coinPosition - xVector * i;
-            else
-                chipStack.transform.localPosition = coinPosition - zVector - xVector * (i - 5);
-
-            Renderer betChipRenderer = myChipStack.GetComponent<Renderer>();
-            betChipRenderer.material.color = color;
-
-            chipStack.SetActive(false);
-            betChips.Add(chipStack);
-        }
     }
 
     private void BetChips(int betAmount)

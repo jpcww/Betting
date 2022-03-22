@@ -42,6 +42,7 @@ MonoBehaviour:
   - RevealColor
   - AnnounceColor
   - InitiatePlayer
+  - InstantiateChips
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
