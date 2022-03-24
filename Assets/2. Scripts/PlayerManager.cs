@@ -6,22 +6,27 @@ using System;
 using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
+using ExitGames.Client.Photon;
 
 public class PlayerManager : MonoBehaviourPunCallbacks
 {
+    int userID;
+    ValueTuple<int, Color, int> playerInfo;
+
     #region UI
     PlayerUI playerUI;
     #endregion
 
     #region Network
     private ExitGames.Client.Photon.Hashtable playerProperties = new ExitGames.Client.Photon.Hashtable();
-
-    public const byte PlayerInitiatedEventCode = 1;
     #endregion
 
     #region Bet
     public Dealer dealer;
-    public int selectedColor;
+    [SerializeField]
+    private Color selectedColor;
+    [SerializeField]
+    private Color revealedColor;
     private bool hasSelectedColor = false;
     public int currentChipAmount = 100;
     private int defaultBetAmount = 10;
@@ -44,15 +49,35 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     public List<GameObject> betChips = new List<GameObject>();
     public List<GameObject> removedOwnedChips = new List<GameObject>();
     public List<GameObject> removedBetChips = new List<GameObject>();
+
+    private Vector3 coinPosition = new Vector3(0, 0.1f, 0);
+    private Vector3 xVector = new Vector3(0.1f, 0, 0);
+    private Vector3 zVector = new Vector3(0, 0, 0.1f);
     #endregion
 
     private void Start()
     {
-        InitiatePlayer();
+        OnPlayerSpawned();
+    }
+
+    private void Update()
+    {
+        if (photonView.IsMine)
+        {
+            // Input
+            SelectGreen();
+            SelectRed();
+            DecideBetAmout();
+            Bet();
+        }
     }
 
     public override void OnEnable()
     {
+        // Photon Event
+        PhotonNetwork.AddCallbackTarget(this);
+
+        // Input
         if (photonView.IsMine)
         {
             if (playerInput == null)
@@ -71,126 +96,132 @@ public class PlayerManager : MonoBehaviourPunCallbacks
 
     public override void OnDisable()
     {
-        if(photonView.IsMine)
+        // Photon Event
+        PhotonNetwork.RemoveCallbackTarget(this);
+
+        // Input
+        if (photonView.IsMine)
             playerInput.Disable();
     }
 
-    private void Update()
+    public void OnEvent(EventData photonEvent)
     {
-        if (photonView.IsMine)
+        byte eventCode = photonEvent.Code;
+
+        // Event : Player Spawn
+        if (eventCode == Dealer.PlayerSpawnedEventCode)
         {
-            // Input
-            SelectGreen();
-            SelectRed();
-            DecideBetAmout();
-            Bet();
+            photonView.RPC("InstantiateChips", RpcTarget.All);
+        }
+
+        // Event : Color Announced
+        if(eventCode == Dealer.ColorAnnounceEventCode)
+        {
+            revealedColor = (Color)photonEvent.CustomData;
+            ProcessWinLose(revealedColor);
         }
     }
 
-    private void InitiatePlayer()
+
+    // PLAYER SPAWN
+    private void OnPlayerSpawned()
     {
+        if (!photonView.IsMine)
+            return;
         // PLAYER
-        if(photonView.IsMine)
-        {
-            // Dealer
-            dealer = PhotonView.Find(1).gameObject.GetComponent<Dealer>();
+        // Dealer
+        dealer = PhotonView.Find(1).gameObject.GetComponent<Dealer>();
 
-            // UI
-            playerUI = GetComponentInChildren<PlayerUI>();
-            playerUI.SetUserName(photonView.Owner.NickName);
-            playerUI.SetColor(Color.gray);
+        // Seat the player
+        int seatNumber = photonView.ViewID % 3 + 1;
+        Debug.Log("seat number " + seatNumber);
+        Debug.Log(string.Format($"Seat_{seatNumber}"));
+        GameObject seat = GameObject.FindGameObjectWithTag(string.Format($"Seat_{seatNumber}"));
+        transform.SetParent(seat.transform);
+        transform.localPosition = Vector3.zero;
+        transform.LookAt(dealer.transform);
+        GetComponentInChildren<Camera>().enabled = true;
+        GetComponentInChildren<Canvas>().enabled = true;
 
-            // Network Communication
-            playerProperties.Add("selectedColor", -1);
-            playerProperties.Add("betAmount", betAmount);
-            playerProperties.Add("hasBet", hasBet);
-            playerProperties.Add("hasReceivedColor", false);
-            playerProperties.Add("hasProcessedWinLose", false);
-            StartCoroutine(WaitForRevealedColor()); // REPLACE WITH EVENT
+        // UI
+        playerUI = GetComponentInChildren<PlayerUI>();
+        playerUI.SetUserName(photonView.Owner.NickName);
+        playerUI.SetColor(Color.gray);
 
-            PlayerInstantiatedEvent();
-        }
+        // Photon Event
+        PlayerSpawnEvent();
     }
 
-    private void PlayerInstantiatedEvent()
+    private void PlayerSpawnEvent()
     {
-        int photonViewID = photonView.ViewID;
+        userID = int.Parse(PhotonNetwork.LocalPlayer.UserId);
         RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
-        PhotonNetwork.RaiseEvent(PlayerInitiatedEventCode, photonViewID, raiseEventOptions, ExitGames.Client.Photon.SendOptions.SendReliable);
-        Debug.Log("event raised");
+        PhotonNetwork.RaiseEvent(Dealer.PlayerSpawnedEventCode, PhotonNetwork.LocalPlayer.UserId, raiseEventOptions, SendOptions.SendReliable);
+        Debug.Log(String.Format($"Player{userID}& event raised"));
     }
 
-    public IEnumerator WaitForRevealedColor()
-    {
-        yield return new WaitUntil(() => playerProperties.ContainsKey("hasReceivedColor") && (bool)playerProperties["hasReceivedColor"] == false && PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("hasRevealedColor") && (bool)PhotonNetwork.CurrentRoom.CustomProperties["hasRevealedColor"] == true);
-
-        playerProperties["hasReceivedColor"] = true;
-        PhotonNetwork.SetPlayerCustomProperties(playerProperties);
-
-        ProcessWinLose((int)PhotonNetwork.CurrentRoom.CustomProperties["revealedColor"]);
-    }
-
-    // SELECT COLORS
+    // SELECT COLORS    
     private void SelectGreen()
     {
+        if (!photonView.IsMine)
+            return;
         if (!selectGreenInput)
             return;
 
         if (!hasBet)
         {
-            selectedColor = (int)Colors.green;
-            playerUI.SetColor(Color.green);
+            // Local UI
+            selectedColor = Color.green;
+            playerUI.SetColor(selectedColor);
 
-            // Network communication
-            playerProperties["selectedColor"] = (int)Colors.green;
-
+            // Flags
             hasSelectedColor = true;
             selectGreenInput = false;
         }
     }
     private void SelectRed()
     {
+        if (!photonView.IsMine)
+            return;
         if (!selectRedInput)
             return;
 
         if (!hasBet)
         {
-            selectedColor = (int)Colors.red;
-            playerUI.SetColor(Color.red);
+            // Local UI
+            selectedColor = Color.red;
+            playerUI.SetColor(selectedColor);
 
-            // Network communication
-            playerProperties["selectedColor"] = (int)Colors.red;
-
+            // Flags
             hasSelectedColor = true;
-            selectRedInput = false;
+            selectGreenInput = false;
         }
     }
 
     // DECIDE AMOUNT OF BETTING
     public void DecideBetAmout()
     {
-        if (!decideBetAmountInput)
+        if (!(decideBetAmountInput && photonView.IsMine))
             return;
 
-        if(!hasSelectedColor)
+        // Not selected color yet
+        if (!hasSelectedColor)
         {
             playerUI.DisplayWarningMessage("Please Select Color");
             decideBetAmountInput = false;
             return;
         }
-
+        
+        // Avaialble to bet
         if (!hasBet && betAmount < currentChipAmount)
         {
             betAmount += defaultBetAmount;
             playerUI.DisplayBetAmount(string.Format("Bet Amount : ${0}", betAmount));
-
-            // Network communication
-            playerProperties["betAmount"] = betAmount;
-
             decideBetAmountInput = false;
             return;
         }
 
+        // Not enough chips
         else if(!hasBet && betAmount >= currentChipAmount)
         {
             playerUI.DisplayWarningMessage("Not Enough Chips");
@@ -198,6 +229,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             return;
         }
 
+        // Already bet
         else if(hasBet)
         {
             playerUI.DisplayWarningMessage("Already Bet");
@@ -211,7 +243,10 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     {
         if (!betInput|| hasBet)
             return;
+        if (!photonView.IsMine)
+            return;
 
+        // Not yet selected color
         if (!hasSelectedColor)
         {
             playerUI.DisplayWarningMessage("Please Select Color");
@@ -219,6 +254,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             return;
         }
 
+        // Bet
         if (hasSelectedColor)
         {
             // UI
@@ -232,14 +268,21 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             hasBet = true;
             betInput = false;
 
-            // Network communication
-            playerProperties["hasBet"] = hasBet;
-            PhotonNetwork.SetPlayerCustomProperties(playerProperties);
+            // Photon Event
+            BetEvent();
         }
     }
 
+    private void BetEvent()
+    {
+        ValueTuple<int, Color, int> playerInfo = new ValueTuple<int, Color, int>(userID, selectedColor, betAmount);
+        RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        PhotonNetwork.RaiseEvent(Dealer.BetEventCode, betAmount, raiseEventOptions, SendOptions.SendReliable);
+        Debug.Log("Bet & event raised");
+    }
+
     // PROCESS WIN/LOSE
-    private void ProcessWinLose(int revealedColor)
+    private void ProcessWinLose(Color revealedColor)
     {
         Debug.Log("ProcessWinLose");
         if(revealedColor == selectedColor)
@@ -254,13 +297,6 @@ public class PlayerManager : MonoBehaviourPunCallbacks
 
         hasSelectedColor = false;
         hasBet = false;
-        playerProperties["hasBet"] = hasBet;
-        playerProperties["hasReceivedColor"] = false;
-        PhotonNetwork.SetPlayerCustomProperties(playerProperties);  // It seems to take time to update through the server
-
-        // Reinitialize Coroutine in Dealer
-        StartCoroutine(dealer.WaitUntilAllBet());
-        StartCoroutine(WaitForRevealedColor());
     }
 
     // EARN CHIPS
@@ -270,6 +306,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         currentChipAmount += betAmount;
         playerUI.DisplayWinLose(true);
         playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
+        playerUI.DisplayBetAmount(string.Format("Bet Amount : ${0}", 0));
 
         // CHIPS
         GetChipsBack(betAmount);
@@ -278,13 +315,16 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         betAmount = 0;
         hasBet = false;
         hasSelectedColor = false;
-        selectedColor = -1;
+        selectedColor = Color.gray;
+
+        // TODO : RESTART COROUTINE OF WAITUNTILALLBET() IN DEALER
     }
     // LOSE CHIPS
     public void LoseChips()
     {
         playerUI.DisplayWinLose(false);
         playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
+        playerUI.DisplayBetAmount(string.Format("Bet Amount : ${0}", 0));
 
         // CHIPS
         RemoveChips(betAmount);
@@ -300,9 +340,12 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         betAmount = 0;
         hasBet = false;
         hasSelectedColor = false;
-        selectedColor = -1;
+        selectedColor = Color.gray;
+
+        // TODO : RESTART COROUTINE OF WAITUNTILALLBET() IN DEALER
     }
 
+    #region Methods : for Chips
     private void BetChips(int betAmount)
     {
         for (int i = 0; i < betAmount / 10; i++)
@@ -311,6 +354,94 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             betChips[i].SetActive(true);
         }
     }
+
+    [PunRPC]
+    public void InstantiateChips()
+    {
+        // Access Player
+        Transform transForm_availableChips = transform.GetChild(2);
+        Transform transForm_betChips = transform.GetChild(3);
+
+        Color color = new Color();
+
+        for (int i = 0; i < 10; i++)
+        {
+            // Instantiate
+            GameObject myChipStack = PhotonNetwork.InstantiateRoomObject("ChipStack", Vector3.zero, Quaternion.identity, 0, null);
+            PhotonView photonView_myChipStack = myChipStack.GetPhotonView();
+            photonView_myChipStack.TransferOwnership(photonView.Owner);
+
+            // Position
+            myChipStack.transform.SetParent(transForm_availableChips);  // TODO : NullReferenceException occurs
+
+            if (i < 5)
+                myChipStack.transform.localPosition = coinPosition - xVector * i;
+            else
+                myChipStack.transform.localPosition = coinPosition - zVector - xVector * (i - 5);
+
+            // Color
+            int colorNumber = UnityEngine.Random.Range(0, 11);
+            Renderer myChipRenderer = myChipStack.GetComponent<Renderer>();
+            switch (colorNumber)
+            {
+                case 0:
+                    color = Color.green;
+                    break;
+                case 1:
+                    color = Color.red;
+                    break;
+                case 2:
+                    color = Color.blue;
+                    break;
+                case 3:
+                    color = Color.black;
+                    break;
+                case 4:
+                    color = Color.cyan;
+                    break;
+                case 5:
+                    color = Color.white;
+                    break;
+                case 6:
+                    color = Color.gray;
+                    break;
+                case 7:
+                    color = Color.yellow;
+                    break;
+                case 8:
+                    color = Color.magenta;
+                    break;
+                case 9:
+                    color = Color.HSVToRGB(63, 183, 209);
+                    break;
+            }
+
+            myChipRenderer.material.color = color;
+
+            ownedChips.Add(myChipStack);
+
+            // BET CHIPS
+            // Instantiate
+            GameObject chipStack = PhotonNetwork.InstantiateRoomObject("ChipStack", Vector3.zero, Quaternion.identity, 0, null);
+            PhotonView photonView_chipStack = chipStack.GetPhotonView();
+            photonView_chipStack.TransferOwnership(photonView.Owner);
+
+            // Position
+            chipStack.transform.SetParent(transForm_betChips);
+
+            if (i < 5)
+                chipStack.transform.localPosition = coinPosition - xVector * i;
+            else
+                chipStack.transform.localPosition = coinPosition - zVector - xVector * (i - 5);
+
+            Renderer betChipRenderer = myChipStack.GetComponent<Renderer>();
+            betChipRenderer.material.color = color;
+
+            chipStack.SetActive(false);
+            betChips.Add(chipStack);
+        }
+    }
+
 
     private void GetChipsBack(int betAmount)
     {
@@ -335,7 +466,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         betChips.RemoveRange(0, range);
     }
 
-    private void RefillChips()
+    private void RefillChips() // TODO : IMPLEMENT COROUTINE TO WAIT TO GIVE TIME TO PLAYERS
     {
         List<GameObject> temp = ownedChips;
         ownedChips.Clear();
@@ -353,4 +484,5 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         foreach (GameObject betChip in betChips)
             betChip.SetActive(false);
     }
+    #endregion
 }

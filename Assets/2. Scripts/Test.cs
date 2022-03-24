@@ -9,7 +9,6 @@ public class Test : MonoBehaviour
     private Vector3 moveAmount = Vector3.one;
 
     Test_ObjectManager Test_ObjectManager;
-
     List<GameObject> sceneObjects = new List<GameObject>();
 
     private void Awake()
@@ -42,8 +41,10 @@ public class Test : MonoBehaviour
         }
     }
 
-    private void UpdateGameObjects()    // Search for the game objects only where there are changes
+    // Search for the game objects only where there are changes
+    private void UpdateGameObjects()    
     {
-        sceneObjects.AddRange(GameObject.FindGameObjectsWithTag("scene"));
+        sceneObjects.AddRange
+            (GameObject.FindGameObjectsWithTag("scene"));
     }
 }

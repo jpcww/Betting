@@ -47,12 +47,14 @@ public class PlayerUI : MonoBehaviour
         if(win)
         {
             Debug.Log("Win");
-            StartCoroutine(ShowNotification(text_winLose, "WIN"));
+            StartCoroutine(ShowNotification(text_winLose, "Check Your Chips"));
+            SetColor(Color.gray);
         }
         else
         {
             Debug.Log("lose");
-            StartCoroutine(ShowNotification(text_winLose, "LOSE"));
+            StartCoroutine(ShowNotification(text_winLose, "Check Your Chips"));
+            SetColor(Color.gray);
         }
     }
 

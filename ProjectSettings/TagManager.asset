@@ -7,6 +7,9 @@ TagManager:
   - Bullet
   - Canvas
   - Table
+  - Seat_1
+  - Seat_2
+  - Seat_3
   layers:
   - Default
   - TransparentFX
