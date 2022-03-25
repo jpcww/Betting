@@ -107,7 +107,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks, IOnEventCallback
         if(eventCode == Dealer.ColorAnnounceEventCode)
         {
             revealedColorNumber = (int)photonEvent.CustomData;
-            ProcessWinLose(revealedColorNumber);
+            photonView.RPC("ProcessWinLose", RpcTarget.All, revealedColorNumber);
         }
     }
 
@@ -278,16 +278,20 @@ public class PlayerManager : MonoBehaviourPunCallbacks, IOnEventCallback
     }
 
     // PROCESS WIN/LOSE
+    [PunRPC]
     private void ProcessWinLose(int revealedColorNumber)
     {
-        if(revealedColorNumber == selectedColorNumber)
+        if (photonView.IsMine)
         {
-            photonView.RPC("EarnChips", RpcTarget.All);
-        }
+            if (revealedColorNumber == selectedColorNumber)
+            {
+                photonView.RPC("EarnChips", RpcTarget.All);
+            }
 
-        else
-        {
-            photonView.RPC("LoseChips", RpcTarget.All);
+            else
+            {
+                photonView.RPC("LoseChips", RpcTarget.All);
+            }
         }
 
         hasSelectedColor = false;
@@ -311,10 +315,11 @@ public class PlayerManager : MonoBehaviourPunCallbacks, IOnEventCallback
             hasBet = false;
             hasSelectedColor = false;
             selectedColor = Color.gray;
-        }
 
-        // CHIPS
-        GetChipsBack(betAmount);
+
+            // CHIPS
+            GetChipsBack(betAmount);
+        }
 
         // TODO : RESTART COROUTINE OF WAITUNTILALLBET() IN DEALER
     }
@@ -333,16 +338,16 @@ public class PlayerManager : MonoBehaviourPunCallbacks, IOnEventCallback
             hasBet = false;
             hasSelectedColor = false;
             selectedColor = Color.gray;
-        }
 
-        // CHIPS
-        RemoveChips(betAmount);
+            // CHIPS
+            RemoveChips(betAmount);
 
-        if (currentChipAmount <= 0)
-        {
-            currentChipAmount += 100;
+            if (currentChipAmount <= 0)
+            {
+                currentChipAmount += 100;
 
-            RefillChips();
+                RefillChips();
+            }
         }
         // TODO : RESTART COROUTINE OF WAITUNTILALLBET() IN DEALER
     }

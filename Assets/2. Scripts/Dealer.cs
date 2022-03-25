@@ -138,9 +138,7 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
     // REAVEAL THE COLOR
     public IEnumerator WaitUntilAllBet()
     {
-        Debug.Log("WaitUntilAllBet() starts");
         yield return new WaitUntil(() => allBet == true);
-        Debug.Log("WaitUntilAllBet dones");
         allBet = false;
 
         RevealColor();
