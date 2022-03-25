@@ -8,7 +8,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
 
-public class PlayerManager : MonoBehaviourPunCallbacks
+public class PlayerManager : MonoBehaviourPunCallbacks, IOnEventCallback
 {
     #region Player
     string userID;
@@ -22,8 +22,9 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     public Dealer dealer;
     [SerializeField]
     private Color selectedColor;
+    int selectedColorNumber = -1;
     [SerializeField]
-    private Color revealedColor;
+    private int revealedColorNumber;
     private bool hasSelectedColor = false;
     public int currentChipAmount = 100;
     private int defaultBetAmount = 10;
@@ -105,8 +106,8 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         // Event : Color Announced
         if(eventCode == Dealer.ColorAnnounceEventCode)
         {
-            revealedColor = (Color)photonEvent.CustomData;
-            ProcessWinLose(revealedColor);
+            revealedColorNumber = (int)photonEvent.CustomData;
+            ProcessWinLose(revealedColorNumber);
         }
     }
 
@@ -140,7 +141,6 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             PlayerSpawnEvent();
 
             InitiateChips();
-            Debug.Log("InstantiateChips");
         }
     }
 
@@ -266,30 +266,28 @@ public class PlayerManager : MonoBehaviourPunCallbacks
 
     private void BetEvent()
     {
-        int colorNumber = -1;
-
         if (selectedColor == Color.green)
-            colorNumber = 0;
+            selectedColorNumber = 0;
         else if (selectedColor == Color.red)
-            colorNumber = 1;
+            selectedColorNumber = 1;
 
         
-        object[] playerInfo = new object[] { userID, colorNumber, betAmount };
+        object[] playerInfo = new object[] { userID, selectedColorNumber, betAmount };
         RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
         PhotonNetwork.RaiseEvent(Dealer.BetEventCode, playerInfo, raiseEventOptions, SendOptions.SendReliable);
     }
 
     // PROCESS WIN/LOSE
-    private void ProcessWinLose(Color revealedColor)
+    private void ProcessWinLose(int revealedColorNumber)
     {
-        if(revealedColor == selectedColor)
+        if(revealedColorNumber == selectedColorNumber)
         {
-            EarnChips();
+            photonView.RPC("EarnChips", RpcTarget.All);
         }
 
         else
         {
-            LoseChips();
+            photonView.RPC("LoseChips", RpcTarget.All);
         }
 
         hasSelectedColor = false;
@@ -297,31 +295,45 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     }
 
     // EARN CHIPS
+    [PunRPC]
     public void EarnChips()
     {
-        // UI
-        currentChipAmount += betAmount;
-        playerUI.DisplayWinLose(true);
-        playerUI.DisplayerCurrentChipAmount(string.Format($"Current Chip : ${currentChipAmount}"));
-        playerUI.DisplayBetAmount(string.Format($"Bet Amount : ${betAmount}"));
+        if (photonView.IsMine)
+        {
+            // UI
+            currentChipAmount += betAmount;
+            playerUI.DisplayWinLose(true);
+            playerUI.DisplayerCurrentChipAmount(string.Format($"Current Chip : ${currentChipAmount}"));
+            playerUI.DisplayBetAmount(string.Format($"Bet Amount : ${betAmount}"));
+
+            // Reinitialize Flags
+            betAmount = 0;
+            hasBet = false;
+            hasSelectedColor = false;
+            selectedColor = Color.gray;
+        }
 
         // CHIPS
         GetChipsBack(betAmount);
 
-        // Reinitialize Flags
-        betAmount = 0;
-        hasBet = false;
-        hasSelectedColor = false;
-        selectedColor = Color.gray;
-
         // TODO : RESTART COROUTINE OF WAITUNTILALLBET() IN DEALER
     }
     // LOSE CHIPS
+    [PunRPC]
     public void LoseChips()
     {
-        playerUI.DisplayWinLose(false);
-        playerUI.DisplayerCurrentChipAmount(string.Format($"Current Chip : ${currentChipAmount}"));
-        playerUI.DisplayBetAmount(string.Format($"Bet Amount : ${betAmount}"));
+        if (photonView.IsMine)
+        {
+            playerUI.DisplayWinLose(false);
+            playerUI.DisplayerCurrentChipAmount(string.Format($"Current Chip : ${currentChipAmount}"));
+            playerUI.DisplayBetAmount(string.Format($"Bet Amount : ${betAmount}"));
+
+            // Reinitialize Flags
+            betAmount = 0;
+            hasBet = false;
+            hasSelectedColor = false;
+            selectedColor = Color.gray;
+        }
 
         // CHIPS
         RemoveChips(betAmount);
@@ -332,13 +344,6 @@ public class PlayerManager : MonoBehaviourPunCallbacks
 
             RefillChips();
         }
-
-        // Reinitialize Flags
-        betAmount = 0;
-        hasBet = false;
-        hasSelectedColor = false;
-        selectedColor = Color.gray;
-
         // TODO : RESTART COROUTINE OF WAITUNTILALLBET() IN DEALER
     }
 
@@ -471,4 +476,6 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             betChip.SetActive(false);
     }
     #endregion
+
+    // TODO : Destroy chips after a use leaves
 }

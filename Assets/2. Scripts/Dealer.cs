@@ -23,6 +23,7 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
     public GameObject colorBox;
     public Material material;
     private int randomForColor;
+    private int revealedColorNumber;
     private Color revealedColor;
     #endregion
 
@@ -55,7 +56,7 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
 
     public override void OnDisable()
     {
-        PhotonNetwork.AddCallbackTarget(this);
+        PhotonNetwork.RemoveCallbackTarget(this);
     }
 
     public void OnEvent(EventData photonEvent)
@@ -134,10 +135,12 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
         }
     }
 
+    // REAVEAL THE COLOR
     public IEnumerator WaitUntilAllBet()
     {
+        Debug.Log("WaitUntilAllBet() starts");
         yield return new WaitUntil(() => allBet == true);
-
+        Debug.Log("WaitUntilAllBet dones");
         allBet = false;
 
         RevealColor();
@@ -145,35 +148,34 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
         photonView.RPC("AnnounceColor", RpcTarget.All);
     }
 
-    // REAVEAL THE COLOR
     private void RevealColor()
     {
         randomForColor = UnityEngine.Random.Range(0, 2);
         if (randomForColor == 0)
         {
+            revealedColorNumber = randomForColor;
             revealedColor = Color.green;
         }
         else if (randomForColor == 1)
         {
+            revealedColorNumber = randomForColor;
             revealedColor = Color.red;
         }
-
-        StartCoroutine(WaitUntilAllBet());
     }
 
     [PunRPC]
     private void AnnounceColor()
     {
-        Debug.Log("AnnounceColor : " + revealedColor);
         material.color = revealedColor;
 
         ColorAnnouncedEvent();
+
+        StartCoroutine(WaitUntilAllBet());
     }
 
     private void ColorAnnouncedEvent()
     {
-        RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
-        PhotonNetwork.RaiseEvent(ColorAnnounceEventCode, revealedColor, raiseEventOptions, SendOptions.SendReliable);
-        Debug.Log(string.Format($"Color Revealed : {revealedColor}"));
+        RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All};
+        PhotonNetwork.RaiseEvent(ColorAnnounceEventCode, revealedColorNumber, raiseEventOptions, SendOptions.SendReliable);
     }
 }

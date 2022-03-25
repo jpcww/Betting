@@ -406,7 +406,7 @@ ScriptsOnlyBuild:
     className: SmoothSyncMovement
   - hash:
       serializedVersion: 2
-      Hash: 87c2295dcea73226fc638b600a09f8b1
+      Hash: edade3a21255fad3d0fdb8ec64f67974
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: PlayerManager

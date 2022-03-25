@@ -511,7 +511,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dealer: {fileID: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
-  revealedColor: {r: 0, g: 0, b: 0, a: 0}
+  revealedColorNumber: 0
   currentChipAmount: 100
   betAmount: 0
   hasBet: 0
