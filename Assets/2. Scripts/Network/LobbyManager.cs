@@ -54,7 +54,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     {
         if (input_roomName.text.Length >= 1) // TODO: add warning when there is no name
         {
-            PhotonNetwork.CreateRoom(input_roomName.text, new RoomOptions() { MaxPlayers = 3, BroadcastPropsChangeToAll = true });  // Create a room
+            PhotonNetwork.CreateRoom(input_roomName.text, new RoomOptions() { PublishUserId = true, MaxPlayers = 3, BroadcastPropsChangeToAll = true }) ;  // Create a room with UserID published
         }
     }
 

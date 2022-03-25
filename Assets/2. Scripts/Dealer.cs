@@ -27,10 +27,10 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
     #endregion
 
     #region Player
-    List<Color> colors = new List<Color>();
+    List<int> colors = new List<int>();
     bool allBet = false;
     int currentNumberOfUsers = 0;
-    List<ValueTuple<int, Color, int>> playerInfos = new List<ValueTuple<int, Color, int>>(); // UserID, Color, BetAmount
+    List<ValueTuple<string, int, int>> playerInfos = new List<ValueTuple<string, int, int>>(); // UserID, ColorNumber, BetAmount
     #endregion
 
     #region Coin
@@ -65,7 +65,7 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
         // Event : Player Spawn
         if(eventCode == PlayerSpawnedEventCode)
         {
-            ValueTuple<int, Color, int> playerInfo = new ValueTuple<int, Color, int>((int)photonEvent.CustomData, Color.gray, 0);
+            ValueTuple<string, int, int> playerInfo = new ValueTuple<string, int, int>((string)photonEvent.CustomData, -1, 0);
             playerInfos.Add(playerInfo);
             currentNumberOfUsers = playerInfos.Count;
         }
@@ -73,12 +73,17 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
         // Event : Bet
         else if (eventCode == BetEventCode)
         {
-            ValueTuple<int, Color, int> receivedPlayerInfo = (ValueTuple<int, Color, int>)photonEvent.CustomData; 
+            ValueTuple<string, int, int> receivedPlayerInfo = new ValueTuple<string, int, int>();
+            object[] receivedData = (object[])photonEvent.CustomData;
+            receivedPlayerInfo.Item1 = (string)receivedData[0];
+            receivedPlayerInfo.Item2 = (int)receivedData[1];
+            receivedPlayerInfo.Item3 = (int)receivedData[2];
+
             OnReceiveBet(receivedPlayerInfo);
         }
     }
 
-    private void OnReceiveBet(ValueTuple<int, Color, int> receivedInfo)
+    private void OnReceiveBet(ValueTuple<string, int, int> receivedInfo)
     {
         // Check all bets from players
         UpdatePlayerInfo(receivedInfo);
@@ -88,13 +93,13 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
         // TODO : UPDATE UI THAT SHOW EVERY ONE's BET AND COLOR
     }
 
-    private void UpdatePlayerInfo(ValueTuple<int, Color, int> receivedInfo)
+    private void UpdatePlayerInfo(ValueTuple<string, int, int> receivedInfo)
     {
         for (int i = 0; i < playerInfos.Count; i++)
         {
             if (playerInfos[i].Item1 == receivedInfo.Item1)
             {
-                ValueTuple<int, Color, int> matchedInfo = playerInfos[i];
+                ValueTuple<string, int, int> matchedInfo = playerInfos[i];
                 matchedInfo.Item2 = receivedInfo.Item2;
                 matchedInfo.Item3 = receivedInfo.Item3;
                 playerInfos[i] = matchedInfo;
@@ -111,12 +116,12 @@ public class Dealer : MonoBehaviourPunCallbacks, IOnEventCallback
         // Check if there are players that just joined/left while other players are betting
         if(currentNumberOfUsers == playerInfos.Count)
         {
-            foreach(ValueTuple<int, Color, int> playerInfo in playerInfos)
+            foreach(ValueTuple<string, int, int> playerInfo in playerInfos)
             {
                 colors.Add(playerInfo.Item2);
             }
 
-            if (!colors.Contains(Color.gray))
+            if (!colors.Contains(-1))
             {
                 allBet = true;
                 colors.Clear();

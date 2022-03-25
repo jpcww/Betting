@@ -10,15 +10,12 @@ using ExitGames.Client.Photon;
 
 public class PlayerManager : MonoBehaviourPunCallbacks
 {
-    int userID;
-    ValueTuple<int, Color, int> playerInfo;
+    #region Player
+    string userID;
+    #endregion
 
     #region UI
     PlayerUI playerUI;
-    #endregion
-
-    #region Network
-    private ExitGames.Client.Photon.Hashtable playerProperties = new ExitGames.Client.Photon.Hashtable();
     #endregion
 
     #region Bet
@@ -49,15 +46,12 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     public List<GameObject> betChips = new List<GameObject>();
     public List<GameObject> removedOwnedChips = new List<GameObject>();
     public List<GameObject> removedBetChips = new List<GameObject>();
-
-    private Vector3 coinPosition = new Vector3(0, 0.1f, 0);
-    private Vector3 xVector = new Vector3(0.1f, 0, 0);
-    private Vector3 zVector = new Vector3(0, 0, 0.1f);
     #endregion
 
     private void Start()
     {
-        OnPlayerSpawned();
+        if(photonView.IsMine)
+            photonView.RPC("OnPlayerSpawned", RpcTarget.All);
     }
 
     private void Update()
@@ -108,12 +102,6 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     {
         byte eventCode = photonEvent.Code;
 
-        // Event : Player Spawn
-        if (eventCode == Dealer.PlayerSpawnedEventCode)
-        {
-            photonView.RPC("InstantiateChips", RpcTarget.All);
-        }
-
         // Event : Color Announced
         if(eventCode == Dealer.ColorAnnounceEventCode)
         {
@@ -122,42 +110,45 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         }
     }
 
-
+    [PunRPC]
     // PLAYER SPAWN
     private void OnPlayerSpawned()
     {
-        if (!photonView.IsMine)
-            return;
-        // PLAYER
+        // Player : Remote
         // Dealer
         dealer = PhotonView.Find(1).gameObject.GetComponent<Dealer>();
 
         // Seat the player
         int seatNumber = photonView.ViewID % 3 + 1;
-        Debug.Log("seat number " + seatNumber);
-        Debug.Log(string.Format($"Seat_{seatNumber}"));
         GameObject seat = GameObject.FindGameObjectWithTag(string.Format($"Seat_{seatNumber}"));
         transform.SetParent(seat.transform);
         transform.localPosition = Vector3.zero;
         transform.LookAt(dealer.transform);
-        GetComponentInChildren<Camera>().enabled = true;
-        GetComponentInChildren<Canvas>().enabled = true;
 
+        // Player : Local Only
         // UI
-        playerUI = GetComponentInChildren<PlayerUI>();
-        playerUI.SetUserName(photonView.Owner.NickName);
-        playerUI.SetColor(Color.gray);
+        if (photonView.IsMine)
+        {
+            GetComponentInChildren<Camera>().enabled = true;
+            GetComponentInChildren<Canvas>().enabled = true;
 
-        // Photon Event
-        PlayerSpawnEvent();
+            playerUI = GetComponentInChildren<PlayerUI>();
+            playerUI.SetUserName(photonView.Owner.NickName);
+            playerUI.SetColor(Color.gray);
+
+            // Photon Event
+            PlayerSpawnEvent();
+
+            InitiateChips();
+            Debug.Log("InstantiateChips");
+        }
     }
 
     private void PlayerSpawnEvent()
     {
-        userID = int.Parse(PhotonNetwork.LocalPlayer.UserId);
+        userID = PhotonNetwork.LocalPlayer.UserId;
         RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
-        PhotonNetwork.RaiseEvent(Dealer.PlayerSpawnedEventCode, PhotonNetwork.LocalPlayer.UserId, raiseEventOptions, SendOptions.SendReliable);
-        Debug.Log(String.Format($"Player{userID}& event raised"));
+        PhotonNetwork.RaiseEvent(Dealer.PlayerSpawnedEventCode, userID, raiseEventOptions, SendOptions.SendReliable);
     }
 
     // SELECT COLORS    
@@ -216,7 +207,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         if (!hasBet && betAmount < currentChipAmount)
         {
             betAmount += defaultBetAmount;
-            playerUI.DisplayBetAmount(string.Format("Bet Amount : ${0}", betAmount));
+            playerUI.DisplayBetAmount(string.Format($"Bet Amount : ${betAmount}"));
             decideBetAmountInput = false;
             return;
         }
@@ -259,7 +250,7 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         {
             // UI
             currentChipAmount -= betAmount;
-            playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
+            playerUI.DisplayerCurrentChipAmount(string.Format($"Current Chip : ${currentChipAmount}"));
 
             // Move Chips
             BetChips(betAmount);
@@ -275,16 +266,22 @@ public class PlayerManager : MonoBehaviourPunCallbacks
 
     private void BetEvent()
     {
-        ValueTuple<int, Color, int> playerInfo = new ValueTuple<int, Color, int>(userID, selectedColor, betAmount);
+        int colorNumber = -1;
+
+        if (selectedColor == Color.green)
+            colorNumber = 0;
+        else if (selectedColor == Color.red)
+            colorNumber = 1;
+
+        
+        object[] playerInfo = new object[] { userID, colorNumber, betAmount };
         RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
-        PhotonNetwork.RaiseEvent(Dealer.BetEventCode, betAmount, raiseEventOptions, SendOptions.SendReliable);
-        Debug.Log("Bet & event raised");
+        PhotonNetwork.RaiseEvent(Dealer.BetEventCode, playerInfo, raiseEventOptions, SendOptions.SendReliable);
     }
 
     // PROCESS WIN/LOSE
     private void ProcessWinLose(Color revealedColor)
     {
-        Debug.Log("ProcessWinLose");
         if(revealedColor == selectedColor)
         {
             EarnChips();
@@ -305,8 +302,8 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         // UI
         currentChipAmount += betAmount;
         playerUI.DisplayWinLose(true);
-        playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
-        playerUI.DisplayBetAmount(string.Format("Bet Amount : ${0}", 0));
+        playerUI.DisplayerCurrentChipAmount(string.Format($"Current Chip : ${currentChipAmount}"));
+        playerUI.DisplayBetAmount(string.Format($"Bet Amount : ${betAmount}"));
 
         // CHIPS
         GetChipsBack(betAmount);
@@ -323,8 +320,8 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     public void LoseChips()
     {
         playerUI.DisplayWinLose(false);
-        playerUI.DisplayerCurrentChipAmount(string.Format("Current Chip : ${0}", currentChipAmount));
-        playerUI.DisplayBetAmount(string.Format("Bet Amount : ${0}", 0));
+        playerUI.DisplayerCurrentChipAmount(string.Format($"Current Chip : ${currentChipAmount}"));
+        playerUI.DisplayBetAmount(string.Format($"Bet Amount : ${betAmount}"));
 
         // CHIPS
         RemoveChips(betAmount);
@@ -346,6 +343,83 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     }
 
     #region Methods : for Chips
+    public void InitiateChips()
+    {
+        // Placement of chips
+        Transform transForm_availableChips = transform.GetChild(2);
+        Transform transForm_betChips = transform.GetChild(3);
+
+        for (int i = 0; i < 10; i++)
+        {
+            // Color
+            int colorNumber = UnityEngine.Random.Range(0, 11);
+
+            photonView.RPC("InstantiateChip", RpcTarget.AllBuffered, i, colorNumber);
+        }
+    }
+
+    [PunRPC]
+    private void InstantiateChip(int index, int colorNumber)
+    {
+        Color color = new Color();
+
+        switch (colorNumber)
+        {
+            case 0:
+                color = Color.green;
+                break;
+            case 1:
+                color = Color.red;
+                break;
+            case 2:
+                color = Color.blue;
+                break;
+            case 3:
+                color = Color.black;
+                break;
+            case 4:
+                color = Color.cyan;
+                break;
+            case 5:
+                color = Color.white;
+                break;
+            case 6:
+                color = Color.gray;
+                break;
+            case 7:
+                color = Color.yellow;
+                break;
+            case 8:
+                color = Color.magenta;
+                break;
+            case 9:
+                color = Color.HSVToRGB(63, 183, 209);
+                break;
+        }
+
+        // Instantiate
+        GameObject ownedChipStack = PhotonNetwork.Instantiate("ChipStack", Vector3.zero, Quaternion.identity, 0, null);
+        Chip ownedChip = ownedChipStack.GetComponent<Chip>();
+
+        ownedChip.photonView_player = photonView;
+        ownedChip.parentObject = transForm_availableChips;
+        ownedChip.chipNumber = index;
+        ownedChip.color = color;
+
+        ownedChips.Add(ownedChipStack);
+
+        GameObject betChipStack = PhotonNetwork.Instantiate("ChipStack", Vector3.zero, Quaternion.identity, 0, null);
+        Chip betChip = betChipStack.GetComponent<Chip>();
+
+        betChip.photonView_player = photonView;
+        betChip.parentObject = transForm_betChips;
+        betChip.chipNumber = index;
+        betChip.color = color;
+        betChip.GetComponent<MeshRenderer>().enabled = false;
+
+        betChips.Add(betChipStack);
+    }
+
     private void BetChips(int betAmount)
     {
         for (int i = 0; i < betAmount / 10; i++)
@@ -354,94 +428,6 @@ public class PlayerManager : MonoBehaviourPunCallbacks
             betChips[i].SetActive(true);
         }
     }
-
-    [PunRPC]
-    public void InstantiateChips()
-    {
-        // Access Player
-        Transform transForm_availableChips = transform.GetChild(2);
-        Transform transForm_betChips = transform.GetChild(3);
-
-        Color color = new Color();
-
-        for (int i = 0; i < 10; i++)
-        {
-            // Instantiate
-            GameObject myChipStack = PhotonNetwork.InstantiateRoomObject("ChipStack", Vector3.zero, Quaternion.identity, 0, null);
-            PhotonView photonView_myChipStack = myChipStack.GetPhotonView();
-            photonView_myChipStack.TransferOwnership(photonView.Owner);
-
-            // Position
-            myChipStack.transform.SetParent(transForm_availableChips);  // TODO : NullReferenceException occurs
-
-            if (i < 5)
-                myChipStack.transform.localPosition = coinPosition - xVector * i;
-            else
-                myChipStack.transform.localPosition = coinPosition - zVector - xVector * (i - 5);
-
-            // Color
-            int colorNumber = UnityEngine.Random.Range(0, 11);
-            Renderer myChipRenderer = myChipStack.GetComponent<Renderer>();
-            switch (colorNumber)
-            {
-                case 0:
-                    color = Color.green;
-                    break;
-                case 1:
-                    color = Color.red;
-                    break;
-                case 2:
-                    color = Color.blue;
-                    break;
-                case 3:
-                    color = Color.black;
-                    break;
-                case 4:
-                    color = Color.cyan;
-                    break;
-                case 5:
-                    color = Color.white;
-                    break;
-                case 6:
-                    color = Color.gray;
-                    break;
-                case 7:
-                    color = Color.yellow;
-                    break;
-                case 8:
-                    color = Color.magenta;
-                    break;
-                case 9:
-                    color = Color.HSVToRGB(63, 183, 209);
-                    break;
-            }
-
-            myChipRenderer.material.color = color;
-
-            ownedChips.Add(myChipStack);
-
-            // BET CHIPS
-            // Instantiate
-            GameObject chipStack = PhotonNetwork.InstantiateRoomObject("ChipStack", Vector3.zero, Quaternion.identity, 0, null);
-            PhotonView photonView_chipStack = chipStack.GetPhotonView();
-            photonView_chipStack.TransferOwnership(photonView.Owner);
-
-            // Position
-            chipStack.transform.SetParent(transForm_betChips);
-
-            if (i < 5)
-                chipStack.transform.localPosition = coinPosition - xVector * i;
-            else
-                chipStack.transform.localPosition = coinPosition - zVector - xVector * (i - 5);
-
-            Renderer betChipRenderer = myChipStack.GetComponent<Renderer>();
-            betChipRenderer.material.color = color;
-
-            chipStack.SetActive(false);
-            betChips.Add(chipStack);
-        }
-    }
-
 
     private void GetChipsBack(int betAmount)
     {

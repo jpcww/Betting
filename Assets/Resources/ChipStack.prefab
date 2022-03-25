@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8298920042890135472}
   - component: {fileID: 2278014774071916018}
   - component: {fileID: 993297466769036445}
-  - component: {fileID: 5627792151272500161}
+  - component: {fileID: 5127295421964604957}
   m_Layer: 0
   m_Name: ChipStack
   m_TagString: Untagged
@@ -93,7 +93,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d5e51e5afe3542e7b8b6887c47a4c26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &5627792151272500161
+--- !u!114 &5127295421964604957
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -109,7 +109,7 @@ MonoBehaviour:
   Group: 0
   prefixField: -1
   Synchronization: 3
-  OwnershipTransfer: 2
+  OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents: []
   sceneViewId: 0
